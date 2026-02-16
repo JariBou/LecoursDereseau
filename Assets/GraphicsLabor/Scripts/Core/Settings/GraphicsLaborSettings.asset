@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94912ccb36da45428287f20c20fc2803, type: 3}
+  m_Name: GraphicsLaborSettings
+  m_EditorClassIdentifier: 
+  _tempScriptableObjectsPath: Assets/GraphicsLabor/Generated/ScriptableObjects
+  _tagsPath: Assets/GraphicsLabor/Scripts/Core/Tags
+  _defaultEnumsPath: Assets/GraphicsLabor/Generated/Enums
+  _tags:
+  - Entity
+  - Player
+  _enums:
+  - _enumClassName: 
+    _enumSpace: 
+    _isFlag: 0
+    _enumNamesAndValues:
+      _serializedKeyValues: []
+      _drawStyle: 0
+  - _enumClassName: 
+    _enumSpace: 
+    _isFlag: 0
+    _enumNamesAndValues:
+      _serializedKeyValues:
+      - Key: 
+        Value: 0
+      - Key: 
+        Value: 0
+      _drawStyle: 0
+  _test2:
+    _serializedKeyValues:
+    - Key: 
+      Value:
+        _test: 
+        _test2: 0
+        _test3: 0
+    - Key: 
+      Value:
+        _test: 
+        _test2: 0
+        _test3: 0
+    - Key: 
+      Value:
+        _test: 
+        _test2: 0
+        _test3: 0
+    _drawStyle: 1
+  _test21:
+    _serializedKeyValues:
+    - Key: 
+      Value:
+      - 
+      - 
+    - Key: 
+      Value:
+      - 
+      - 
+      - 
+    - Key: 
+      Value: []
+    _drawStyle: 0
+  _test3:
+  - _serializedKeyValues:
+    - Key: 
+      Value:
+        _test: 
+        _test2: 0
+        _test3: 0
+    - Key: 
+      Value:
+        _test: 
+        _test2: 0
+        _test3: 0
+    _drawStyle: 0
+  - _serializedKeyValues: []
+    _drawStyle: 0
+  _test4:
+    _test:
+      _serializedKeyValues:
+      - Key: 
+        Value:
+          _test: 
+          _test2: 0
+          _test3: 0
+      _drawStyle: 0

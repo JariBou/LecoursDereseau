@@ -3,6 +3,7 @@ using _project.Scripts.PluginInterfaces;
 using Network._project.Scripts.Network.Communication;
 using UnityEngine;
 using Event = _project.Scripts.PluginInterfaces.Event;
+using EventType = _project.Scripts.PluginInterfaces.EventType;
 
 namespace Network._project.Scripts.Network.Entities
 {
@@ -11,10 +12,11 @@ namespace Network._project.Scripts.Network.Entities
         private Host _client = new();
         private Peer? _server;
         private string _address;
-        private string _port;
+        private ushort _port;
         private AddressType _addressType;
         private bool _connected;
-       
+        private Action<NetworkEvent> _onConnectedCallback;
+
         public bool Connected => _connected;
         public string IpAddress
         {
@@ -28,7 +30,7 @@ namespace Network._project.Scripts.Network.Entities
                 _address = value;
             }
         }
-        public string Port
+        public ushort Port
         {
             get => _port;
             set
@@ -54,8 +56,6 @@ namespace Network._project.Scripts.Network.Entities
         }
         public Host Client => _client;
         public Peer? Server => _server;
-        
-        public event Action<NetworkEvent> EventReceived;
 
         public void Disconnect()
         {
@@ -65,27 +65,31 @@ namespace Network._project.Scripts.Network.Entities
             _connected = false;
         }
 
+        public void SetOnConnectedCallback(Action<NetworkEvent> callback)
+        {
+            _onConnectedCallback = callback;
+        }
+
         public void Connect()
         {
             ConnectTo(_address, _port, _addressType);
         }
         
-        public void ConnectTo(string addressString, string port, AddressType addressType)
+        public void ConnectTo(string addressString, ushort port, AddressType addressType)
         {
             if (!Library.Initialize())
                 throw new Exception("Failed to initialize ENet");
             IpAddressType = addressType;
             Port = port;
             IpAddress = addressString;
-            // Address address = Address.BuildAny(_addressType);
-            Address address = new Address();
+            Address address = new();
             if (!address.SetHost(addressType, addressString))
             {
                 Debug.LogError("failed to resolve \"" + addressString + "\"");
                 return;
             }
             
-            address.Port = Convert.ToUInt16(port);
+            address.Port = Port;
             
             _client?.Dispose();
             _client = new Host();
@@ -96,22 +100,27 @@ namespace Network._project.Scripts.Network.Entities
             // On laisse la connexion se faire pendant un maximum de 50 * 100ms = 5s
             for (uint i = 0; i < 50; ++i)
             {
-                Event evt = new Event();
-                if (_client.Service(100, out evt) > 0)
+                if (_client.Service(100, out Event evt) > 0)
                 {
-                    Debug.Log(evt.Type);
-                    // Nous avons un événement, la connexion a soit pu s'effectuer (ENET_EVENT_TYPE_CONNECT) soit échoué (ENET_EVENT_TYPE_DISCONNECT)
-                    break; //< On sort de la boucle
+                    // We need to set Connected so that the send message to server method is available
+                    if (evt.Type == EventType.Connect)
+                    {
+                        _connected = true;
+                    }
+                    
+                    if (_onConnectedCallback != null)
+                    {
+                        _onConnectedCallback(NetworkEvent.FromENet6Event(evt));
+                    }
+                    
+                    break;
                 }
             }
             
             if (_server.Value.State != PeerState.Connected)
             {
                 Debug.LogError("connection to \"" + addressString + "\" failed");
-                return;
             }
-
-            _connected = true;
         }
 
         public bool SendMessageToServer(NetworkMessage message, byte channelId = 0)
@@ -121,27 +130,6 @@ namespace Network._project.Scripts.Network.Entities
             
             message.SendTo(_server.Value, channelId);
             return true;
-        }
-        
-        // TODO: Check which PollEvents to use
-        #region Poll events
-        
-        public void PollEvents()
-        {
-            if ((!_client?.IsSet ?? true) || !Connected)
-            {
-                return;
-            }
-
-            if (_client.Service(0, out Event evt) > 0)
-            {
-                do
-                {
-                    NetworkEvent networkEvent = NetworkEvent.FromENet6Event(evt);
-                    EventReceived?.Invoke(networkEvent);
-                }
-                while (_client.CheckEvents(out evt) > 0);
-            }
         }
 
         public void PollEvents(Action<NetworkEvent> callback)
@@ -161,25 +149,5 @@ namespace Network._project.Scripts.Network.Entities
                 while (_client.CheckEvents(out evt) > 0);
             }
         }
-        
-        public void PollEvents(Action<Event> callback)
-        {
-            if ((!_client?.IsSet ?? true) || !Connected)
-            {
-                return;
-            }
-
-            if (_client.Service(0, out Event evt) > 0)
-            {
-                do
-                {
-                    NetworkEvent networkEvent = NetworkEvent.FromENet6Event(evt);
-                    callback(evt);
-                }
-                while (_client.CheckEvents(out evt) > 0);
-            }
-        }
-        
-        #endregion
     }
 }

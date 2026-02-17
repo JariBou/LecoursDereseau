@@ -18,6 +18,7 @@ public class TickManager : MonoBehaviour
     private void Awake()
     {
         Application.targetFrameRate = _framerate;
+        Application.runInBackground = true;
         Physics2D.simulationMode = SimulationMode2D.Update;
         DontDestroyOnLoad(gameObject);
     }
@@ -42,7 +43,7 @@ public class TickManager : MonoBehaviour
     
     private static void OnNetworkTick()
     {
-        // Debug.Log("Calling All PostUpdates");
+        // Debug.Log("Calling All NetworkTicks");
         NetworkTick?.Invoke();
     }
 

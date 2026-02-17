@@ -11,6 +11,7 @@ namespace Network._project.Scripts.Network.Communication
         
         public List<byte> Data => _data;
         public uint DataSize => (uint)_data.Count;
+        public ushort OpCode => _opCode;
         
         public NetworkMessage(List<byte> data, ushort opCode)
         {

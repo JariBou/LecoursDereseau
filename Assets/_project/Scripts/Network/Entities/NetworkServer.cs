@@ -12,7 +12,7 @@ namespace Network._project.Scripts.Network.Entities
     {
         private Host _server = new();
         private string _address;
-        private string _port;
+        private ushort _port;
         private AddressType _addressType;
         private bool _started;
 
@@ -29,7 +29,7 @@ namespace Network._project.Scripts.Network.Entities
                 _address = value;
             }
         }
-        public string Port
+        public ushort Port
         {
             get => _port;
             set
@@ -56,8 +56,6 @@ namespace Network._project.Scripts.Network.Entities
         public Host Server => _server;
 
         public List<Peer> ConnectedClients { get; } = new();
-
-        public event Action<NetworkEvent> EventReceived;
 
         public void Stop()
         {
@@ -87,7 +85,7 @@ namespace Network._project.Scripts.Network.Entities
                 _ => AddressType.IPv4
             };
             Address address = Address.BuildAny(addressType);
-            address.Port = Convert.ToUInt16(Port);
+            address.Port = Port;
             
             Stop();
             _server = new Host();
@@ -98,7 +96,7 @@ namespace Network._project.Scripts.Network.Entities
             _started = true;
         }
 
-        private void InternalPollEvent(NetworkEvent networkEvent)
+        private void InternalPollEventCallback(NetworkEvent networkEvent)
         {
             switch (networkEvent.Type)
             {
@@ -132,27 +130,6 @@ namespace Network._project.Scripts.Network.Entities
             }
         }
 
-        // TODO: Check which PollEvents to use
-        #region Poll events
-        
-        public void PollEvents()
-        {
-            if ((!_server?.IsSet ?? true) || !Started)
-            {
-                return;
-            }
-
-            if (_server.Service(0, out Event evt) > 0)
-            {
-                do
-                {
-                    NetworkEvent networkEvent = NetworkEvent.FromENet6Event(evt);
-                    EventReceived?.Invoke(networkEvent);
-                }
-                while (_server.CheckEvents(out evt) > 0);
-            }
-        }
-
         public void PollEvents(Action<NetworkEvent> callback)
         {
             if ((!_server?.IsSet ?? true) || !Started)
@@ -165,31 +142,12 @@ namespace Network._project.Scripts.Network.Entities
                 do
                 {
                     NetworkEvent networkEvent = NetworkEvent.FromENet6Event(evt);
+                    InternalPollEventCallback(networkEvent);
                     callback(networkEvent);
                 }
                 while (_server.CheckEvents(out evt) > 0);
             }
         }
-        
-        public void PollEvents(Action<Event> callback)
-        {
-            if ((!_server?.IsSet ?? true) || !Started)
-            {
-                return;
-            }
-
-            if (_server.Service(0, out Event evt) > 0)
-            {
-                do
-                {
-                    NetworkEvent networkEvent = NetworkEvent.FromENet6Event(evt);
-                    callback(evt);
-                }
-                while (_server.CheckEvents(out evt) > 0);
-            }
-        }
-        
-        #endregion
 
         public bool SendMessageToAllClients(NetworkMessage message, byte channelID = 0)
         {

@@ -5,7 +5,7 @@ public class MainMenuHandler : MonoBehaviour
 {
     public void ButtonHostGame()
     {
-        SceneManager.LoadScene("PipotamPremiumServer", LoadSceneMode.Additive);
+        SceneManager.LoadScene("test-tome-sv", LoadSceneMode.Additive);
     }
 
     public void ButtonJoinGame()
@@ -14,6 +14,7 @@ public class MainMenuHandler : MonoBehaviour
         // Check val in input
         // Start Client server and try to connect to server
         // Load scene
+        SceneManager.LoadScene("test-tome-cl", LoadSceneMode.Additive);
     }
 
 

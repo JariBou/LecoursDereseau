@@ -39,7 +39,7 @@ namespace Network._project.Scripts.Network.Communication
             {
                 bytes.Reverse();
             }
-            readerPos += sizeof(short);
+            readerPos += sizeof(int);
             return BitConverter.ToInt32(bytes.ToArray());
         }
         

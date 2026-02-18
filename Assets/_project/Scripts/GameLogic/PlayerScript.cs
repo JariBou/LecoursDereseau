@@ -28,11 +28,12 @@ namespace _project.Scripts.GameLogic
 
         private void TickManagerOnNetworkTick()
         {
-            if (!NetworkClient.Connected)
+            if (!NetworkClient.Connected || _gameClient.PlayerIndex == 0)
             {
                 return;
             }
             List<byte> byteArray = new();
+            Serializer.SerializeUShort(byteArray, _gameClient.PlayerIndex);
             Serializer.SerializeFloat(byteArray, transform.position.x);
             Serializer.SerializeFloat(byteArray, transform.position.y);
             NetworkClient.SendMessageToServer(new NetworkMessage(byteArray, (ushort)NetOpCodes.Client.PlayerPos));

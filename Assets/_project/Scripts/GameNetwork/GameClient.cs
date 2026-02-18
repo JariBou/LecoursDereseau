@@ -15,6 +15,13 @@ namespace _project.Scripts.GameNetwork
         
         public NetworkClient Client => _client;
 
+        public ushort PlayerIndex => _playerIndex;
+
+        [SerializeField] private GameObject _playerPrefab; // TEMP
+        private Dictionary<ushort, Transform> _players = new(); // TEMP type, to change
+        [SerializeField] private Transform _player; // TEMP type, to change
+        private ushort _playerIndex;
+
         private void Start()
         {
             _client.SetOnConnectedCallback(OnConnectedToServer);
@@ -53,9 +60,53 @@ namespace _project.Scripts.GameNetwork
         {
             if (obj.Type == EventType.Receive)
             {
-                uint readerPos = 0;
-                string deserializeString = Deserializer.DeserializeString(obj.Message.Data, ref readerPos);
-                Debug.Log("Received message: " + deserializeString);
+                if (obj.Message.OpCode == (ushort)NetOpCodes.Server.PlayerConnected)
+                {
+                    uint readerPos = 0;
+                    ushort newPlayerIndex = Deserializer.DeserializeUShort(obj.Message.Data, ref readerPos);
+                    // for now this is how we detect if we were the ones to connect
+                    if (_playerIndex == 0)
+                    {
+                        _playerIndex = newPlayerIndex;
+                    }
+                    int playerCount = Deserializer.DeserializeInt(obj.Message.Data, ref readerPos);
+                    Debug.Log($"Received players data with size of: {playerCount}");
+                    for (int i = 0; i < playerCount; i++)
+                    {
+                        ushort playerIndex = Deserializer.DeserializeUShort(obj.Message.Data, ref readerPos);
+                        if (!_players.ContainsKey(playerIndex))
+                        {
+                            _players.Add(playerIndex,
+                                playerIndex == _playerIndex
+                                    ? _player
+                                    : Instantiate(_playerPrefab, transform).transform);
+                        }
+                    }
+                } else if (obj.Message.OpCode == (ushort)NetOpCodes.Server.PlayerPosData)
+                {
+                    uint readerPos = 0;
+                    int playerCount = Deserializer.DeserializeInt(obj.Message.Data, ref readerPos);
+                    Debug.Log($"Received players Position data with size of: {playerCount}");
+                    for (int i = 0; i < playerCount; i++)
+                    {
+                        ushort playerIndex = Deserializer.DeserializeUShort(obj.Message.Data, ref readerPos);
+                        Debug.Log($">> Getting player pos for player of index: {playerIndex}");
+                        float x =  Deserializer.DeserializeFloat(obj.Message.Data, ref readerPos);
+                        float y =  Deserializer.DeserializeFloat(obj.Message.Data, ref readerPos);
+                        Vector3 position = new Vector3(x, y, 0);
+                        if (playerIndex == _playerIndex)
+                        {
+                            if ((position - _player.position).magnitude > 10)
+                            {
+                                continue;
+                            }
+                        }
+                        _players[playerIndex].position = position;
+                    }
+                }
+                // uint readerPos = 0;
+                // string deserializeString = Deserializer.DeserializeString(obj.Message.Data, ref readerPos);
+                // Debug.Log("Received message: " + deserializeString);
             }
         }
     }

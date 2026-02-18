@@ -62,7 +62,7 @@ namespace Network._project.Scripts.Network.Communication
                 bytes.Reverse();
             }
             readerPos += sizeof(float);
-            return BitConverter.ToUInt32(bytes.ToArray());
+            return BitConverter.ToSingle(bytes.ToArray());
         }
         
         public static double DeserializeDouble(List<byte> byteArray, ref uint readerPos)
@@ -73,7 +73,7 @@ namespace Network._project.Scripts.Network.Communication
                 bytes.Reverse();
             }
             readerPos += sizeof(double);
-            return BitConverter.ToUInt32(bytes.ToArray());
+            return BitConverter.ToDouble(bytes.ToArray());
         }
         
         public static ushort DeserializeUShort(List<byte> byteArray, ref uint readerPos)

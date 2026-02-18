@@ -36,8 +36,17 @@ namespace _project.Scripts.GameNetwork
             TickManager.NetworkTick -= TickManagerOnNetworkTick;
         }
 
+        private void OnDestroy()
+        {
+            _server.Stop();
+        }
+
         private void TickManagerOnNetworkTick()
         {
+            if (Input.GetKeyDown(KeyCode.F2))
+            {
+                _server.Stop();
+            }
             PlayerPositionsPacket positionsPacket = new(_players);
             
             if (!_server.SendMessageToAllClients(positionsPacket.BuildNetworkMessage()))

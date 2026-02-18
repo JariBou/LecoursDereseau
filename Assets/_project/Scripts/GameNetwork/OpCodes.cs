@@ -1,4 +1,4 @@
-﻿namespace _project.Scripts.Network
+﻿namespace _project.Scripts.GameNetwork
 {
     public static class NetOpCodes
     {

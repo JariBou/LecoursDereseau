@@ -16,7 +16,14 @@ namespace Network._project.Scripts.Network.Entities
         private AddressType _addressType;
         private bool _started;
 
+        public int PeerLimit { get; set; } = 32;
+        public int ChannelLimit { get; set; } = 2;
+        public uint IncomingBandwidth { get; set; } = 0;
+        public uint OutgoingBandwidth { get; set; } = 0;
+        
+
         public bool Started => _started;
+        
         public string IpAddress
         {
             get => _address;
@@ -57,17 +64,19 @@ namespace Network._project.Scripts.Network.Entities
 
         public List<Peer> ConnectedClients { get; } = new();
         
-        ~NetworkServer()
-        {
-            Server?.Dispose();
-        }
-
+        
         public void Stop()
         {
             if (!Started)
             {
                 return;
             }
+
+            foreach (Peer client in ConnectedClients)
+            {
+                client.Disconnect(0);
+            }
+            _server?.Flush();
             _server?.Dispose();
             _server = null;
             ConnectedClients.Clear();
@@ -94,10 +103,9 @@ namespace Network._project.Scripts.Network.Entities
             
             Stop();
             _server = new Host();
-            _server.Create(_addressType, address, 32, 2, 0, 0);
+            _server.Create(_addressType, address, PeerLimit, ChannelLimit, IncomingBandwidth, OutgoingBandwidth);
             _server.ThrowIfNotCreated();
             
-            Debug.Log("Server Created");
             _started = true;
         }
 
@@ -158,10 +166,13 @@ namespace Network._project.Scripts.Network.Entities
         {
             if (!Started ||  _server == null) return false;
 
-            foreach (Peer client in ConnectedClients)
-            {
-                message.SendTo(client, channelID, flags);
-            }
+            // foreach (Peer client in ConnectedClients)
+            // {
+            //     message.SendTo(client, channelID, flags);
+            // }
+
+            Packet packet = message.GetPacket(flags);
+            Server.Broadcast(channelID, ref packet);
 
             return true;
         }

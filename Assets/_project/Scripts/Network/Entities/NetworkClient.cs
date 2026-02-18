@@ -16,6 +16,12 @@ namespace Network._project.Scripts.Network.Entities
         private AddressType _addressType;
         private bool _connected;
         private Action<NetworkEvent> _onConnectedCallback;
+        
+
+        public int PeerLimit { get; } = 1;
+        public int ChannelLimit { get; set; } = 2;
+        public uint IncomingBandwidth { get; set; } = 0;
+        public uint OutgoingBandwidth { get; set; } = 0;
 
         public bool Connected => _connected;
         public string IpAddress
@@ -56,18 +62,12 @@ namespace Network._project.Scripts.Network.Entities
         }
         public Host Client => _client;
         public Peer? Server => _server;
-
-        ~NetworkClient()
-        {
-            Client?.Dispose();
-        }
+        
 
         public void Disconnect()
         {
             if (!Connected) return;
-            _client.Dispose();
-            _server = null;
-            _connected = false;
+            Server?.Disconnect(0);
         }
 
         public void SetOnConnectedCallback(Action<NetworkEvent> callback)
@@ -98,9 +98,9 @@ namespace Network._project.Scripts.Network.Entities
             
             _client?.Dispose();
             _client = new Host();
-            _client.Create(address.Type, 1, 2, 0, 0);
+            _client.Create(address.Type, PeerLimit, ChannelLimit, IncomingBandwidth, OutgoingBandwidth);
 
-            _server = _client.Connect(address, 0);
+            _server = _client.Connect(address);
             
             // On laisse la connexion se faire pendant un maximum de 50 * 100ms = 5s
             for (uint i = 0; i < 50; ++i)
@@ -136,22 +136,40 @@ namespace Network._project.Scripts.Network.Entities
             message.SendTo(_server.Value, channelId, flags);
             return true;
         }
+        
+        private void InternalPollEventCallback(NetworkEvent networkEvent)
+        {
+            switch (networkEvent.Type)
+            {
+                case EventType.None:
+                case EventType.Connect:
+                    break;
+                case EventType.Disconnect:
+                    _connected = false;
+                    _client = null;
+                    _server = null;
+                    break;
+                case EventType.Receive:
+                case EventType.Timeout:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
 
         public void PollEvents(Action<NetworkEvent> callback)
         {
-            if ((!_client?.IsSet ?? true) || !Connected)
-            {
-                return;
-            }
+            if ((!_client?.IsSet ?? true) || !Connected) return;
 
             if (_client.Service(0, out Event evt) > 0)
             {
                 do
                 {
                     NetworkEvent networkEvent = NetworkEvent.FromENet6Event(evt);
+                    InternalPollEventCallback(networkEvent);
                     callback(networkEvent);
                 }
-                while (_client.CheckEvents(out evt) > 0);
+                while (_client != null && _client.CheckEvents(out evt) > 0);
             }
         }
     }

@@ -21,8 +21,12 @@ namespace Network._project.Scripts.Network.Communication
         {
             BuildNetworkMessage().SendTo(destination, channelId, flags);
         }
-        
-        public abstract T FromNetworkMessage(NetworkMessage message);
+
+        public T FromNetworkMessage(NetworkMessage message)
+        {
+            return message.OpCode != GetOpcode() ? throw new InvalidPacketException<T>(GetOpcode(), message.OpCode) : FromNetworkMessage_Impl(message);
+        }
+        protected abstract T FromNetworkMessage_Impl(NetworkMessage message);
         public abstract List<byte> Serialize();
     }
 }

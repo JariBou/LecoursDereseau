@@ -59,7 +59,25 @@ namespace _project.Scripts.GameNetwork
 
         private void Callback(NetworkEvent obj)
         {
-            if (obj.Type != EventType.Receive) return;
+            if (obj.Type == EventType.Disconnect)
+            {
+                foreach (KeyValuePair<ushort, Transform> pair in _players)
+                {
+                    ushort playerIndex = pair.Key;
+                    if (playerIndex == _playerIndex)
+                    {
+                        continue;
+                    }
+                    Destroy(_players[playerIndex].gameObject);
+                }
+                _players.Clear();
+                return;
+            } 
+            if (obj.Type != EventType.Receive)
+            {
+                Debug.Log("Received event of type: " + obj.Type);
+                return;
+            }
 
             switch (obj.Message.OpCode)
             {

@@ -16,8 +16,8 @@ namespace _project.Scripts.GameNetwork
 
         private void Awake()
         {
-            _server.IpAddressType = AddressType.Any;
-            _server.Port = 5050;
+            _server.IpAddressType = AddressType.IPv4;
+            _server.Port = Convert.ToUInt16("6060");
             _server.Start();
         }
 
@@ -39,7 +39,6 @@ namespace _project.Scripts.GameNetwork
             if (!_server.SendMessageToAllClients(message))
             {
                 Debug.LogError("SendMessageToAllClients Error");
-                return;
             }
             _server.PollEvents(NetworkEventCallback);
         }
@@ -65,6 +64,7 @@ namespace _project.Scripts.GameNetwork
                         uint readerPos = 0;
                         float pX = Deserializer.DeserializeFloat(obj.Message.Data, ref readerPos);
                         float pY = Deserializer.DeserializeFloat(obj.Message.Data, ref readerPos);
+                        Debug.Log(new Vector3(pX, pY, 0));
                         _player.transform.position = new Vector3(pX, pY, 0);
                     }
                     break;

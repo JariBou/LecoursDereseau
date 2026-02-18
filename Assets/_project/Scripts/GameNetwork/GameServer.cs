@@ -12,6 +12,7 @@ namespace _project.Scripts.GameNetwork
     public class GameServer : MonoBehaviour
     {
         private NetworkServer _server = new();
+        [SerializeField] private Transform _player; // TEMP
 
         private void Awake()
         {
@@ -59,6 +60,12 @@ namespace _project.Scripts.GameNetwork
                         uint readerPos = 0;
                         string clientInstanceId = Deserializer.DeserializeString(obj.Message.Data, ref readerPos);
                         Debug.Log("Client connected with instance ID: " + clientInstanceId);
+                    } else if (obj.Message.OpCode == (ushort)NetOpCodes.Client.PlayerPos)
+                    {
+                        uint readerPos = 0;
+                        float pX = Deserializer.DeserializeFloat(obj.Message.Data, ref readerPos);
+                        float pY = Deserializer.DeserializeFloat(obj.Message.Data, ref readerPos);
+                        _player.transform.position = new Vector3(pX, pY, 0);
                     }
                     break;
                 case EventType.Timeout:

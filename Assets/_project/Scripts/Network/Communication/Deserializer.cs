@@ -54,7 +54,7 @@ namespace Network._project.Scripts.Network.Communication
             return BitConverter.ToInt64(bytes.ToArray());
         }
         
-        public static float DeserializeFloat(List<byte> byteArray, ref float readerPos)
+        public static float DeserializeFloat(List<byte> byteArray, ref uint readerPos)
         {
             List<byte> bytes = byteArray.GetRange((int)readerPos, sizeof(float));
             if (BitConverter.IsLittleEndian)
@@ -65,7 +65,7 @@ namespace Network._project.Scripts.Network.Communication
             return BitConverter.ToUInt32(bytes.ToArray());
         }
         
-        public static double DeserializeDouble(List<byte> byteArray, ref double readerPos)
+        public static double DeserializeDouble(List<byte> byteArray, ref uint readerPos)
         {
             List<byte> bytes = byteArray.GetRange((int)readerPos, sizeof(double));
             if (BitConverter.IsLittleEndian)

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using _project.Scripts.Network;
 using _project.Scripts.PluginInterfaces;
-using Mono.Cecil.Cil;
 using Network._project.Scripts.Network.Communication;
 using Network._project.Scripts.Network.Entities;
 using UnityEngine;
@@ -12,6 +11,8 @@ namespace _project.Scripts.GameNetwork
     public class GameClient : MonoBehaviour
     {
         private NetworkClient _client = new();
+        
+        public NetworkClient Client => _client;
 
         private void Start()
         {

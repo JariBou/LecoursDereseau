@@ -4,13 +4,14 @@
     {
         public enum Server : ushort
         {
-            PlayerConnected,
-            PlayerPosData,
+            PlayerConnected = 1,
+            PlayerPosData = 2,
         }
         
         public enum Client : ushort
         {
-            PlayerInfo,
+            PlayerInfo = 1,
+            PlayerPos = 2 // TEMP
         }
     }
 }

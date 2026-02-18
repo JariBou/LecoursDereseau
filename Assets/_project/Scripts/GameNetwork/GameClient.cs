@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using _project.Scripts.GameNetwork.Packets;
 using _project.Scripts.Network;
 using _project.Scripts.PluginInterfaces;
 using Network._project.Scripts.Network.Communication;
@@ -20,7 +21,7 @@ namespace _project.Scripts.GameNetwork
         [SerializeField] private GameObject _playerPrefab; // TEMP
         private Dictionary<ushort, Transform> _players = new(); // TEMP type, to change
         [SerializeField] private Transform _player; // TEMP type, to change
-        private ushort _playerIndex;
+        private ushort _playerIndex = NetConstants.InvalidClientIndex;
 
         private void Start()
         {
@@ -58,14 +59,17 @@ namespace _project.Scripts.GameNetwork
 
         private void Callback(NetworkEvent obj)
         {
-            if (obj.Type == EventType.Receive)
+            if (obj.Type != EventType.Receive) return;
+
+            switch (obj.Message.OpCode)
             {
-                if (obj.Message.OpCode == (ushort)NetOpCodes.Server.PlayerConnected)
+                case (ushort)NetOpCodes.Server.PlayerConnected:
                 {
                     uint readerPos = 0;
                     ushort newPlayerIndex = Deserializer.DeserializeUShort(obj.Message.Data, ref readerPos);
                     // for now this is how we detect if we were the ones to connect
-                    if (_playerIndex == 0)
+                    // Kind of dirty but works for now
+                    if (_playerIndex == NetConstants.InvalidClientIndex)
                     {
                         _playerIndex = newPlayerIndex;
                     }
@@ -82,31 +86,35 @@ namespace _project.Scripts.GameNetwork
                                     : Instantiate(_playerPrefab, transform).transform);
                         }
                     }
-                } else if (obj.Message.OpCode == (ushort)NetOpCodes.Server.PlayerPosData)
+
+                    break;
+                }
+                case (ushort)NetOpCodes.Server.PlayerPosData:
                 {
-                    uint readerPos = 0;
-                    int playerCount = Deserializer.DeserializeInt(obj.Message.Data, ref readerPos);
-                    Debug.Log($"Received players Position data with size of: {playerCount}");
-                    for (int i = 0; i < playerCount; i++)
+                    PlayerPositionsPacket packet = new PlayerPositionsPacket().FromNetworkMessage(obj.Message);
+                    foreach ((ushort playerIndex, Vector3 position) in packet.PlayerPosDic)
                     {
-                        ushort playerIndex = Deserializer.DeserializeUShort(obj.Message.Data, ref readerPos);
-                        Debug.Log($">> Getting player pos for player of index: {playerIndex}");
-                        float x =  Deserializer.DeserializeFloat(obj.Message.Data, ref readerPos);
-                        float y =  Deserializer.DeserializeFloat(obj.Message.Data, ref readerPos);
-                        Vector3 position = new Vector3(x, y, 0);
                         if (playerIndex == _playerIndex)
                         {
-                            if ((position - _player.position).magnitude > 10)
+                            float magnitude = (position - _player.position).magnitude;
+                            if (magnitude < NetConstants.PlayerPositionReconciliationErrorMargin)
                             {
                                 continue;
                             }
                         }
                         _players[playerIndex].position = position;
                     }
+
+                    break;
                 }
-                // uint readerPos = 0;
-                // string deserializeString = Deserializer.DeserializeString(obj.Message.Data, ref readerPos);
-                // Debug.Log("Received message: " + deserializeString);
+                case (ushort)NetOpCodes.Server.PlayerDisconnected:
+                {
+                    uint readerPos = 0;
+                    ushort playerIndex = Deserializer.DeserializeUShort(obj.Message.Data, ref readerPos);
+                    Destroy(_players[playerIndex].gameObject);
+                    _players.Remove(playerIndex);
+                    break;
+                }
             }
         }
     }

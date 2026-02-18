@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using _project.Scripts.GameNetwork;
 using _project.Scripts.Network;
 using Network._project.Scripts.Network.Communication;
 using Network._project.Scripts.Network.Entities;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace _project.Scripts.GameLogic
 {
@@ -29,6 +27,11 @@ namespace _project.Scripts.GameLogic
         {
             float xAxis = Input.GetAxis("Horizontal");
             float yAxis = Input.GetAxis("Vertical");
+
+            if (Input.GetKeyDown(KeyCode.F1))
+            {
+                NetworkClient.Disconnect();
+            }
             
             transform.position += new Vector3(xAxis, yAxis, 0).normalized *  Time.deltaTime;
         }
@@ -84,7 +87,7 @@ namespace _project.Scripts.GameLogic
 
         private void TickManagerOnNetworkTick()
         {
-            if (!NetworkClient.Connected || _gameClient.PlayerIndex == 0)
+            if (!NetworkClient.Connected || _gameClient.PlayerIndex == NetConstants.InvalidClientIndex)
             {
                 return;
             }

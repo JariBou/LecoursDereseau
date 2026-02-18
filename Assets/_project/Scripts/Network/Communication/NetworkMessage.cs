@@ -19,6 +19,12 @@ namespace Network._project.Scripts.Network.Communication
             _opCode = opCode;
         }
 
+        public NetworkMessage(ushort opCode)
+        {
+            _data = new List<byte>();
+            _opCode = opCode;
+        }
+
         public byte[] GetNetworkBytes()
         {
             List<byte> bytes = new List<byte>();
@@ -60,9 +66,9 @@ namespace Network._project.Scripts.Network.Communication
             return new NetworkMessage(byteArray.GetRange(sizeof(ushort), rawBytes.Length-sizeof(ushort)), opCode);
         }
 
-        public void SendTo(Peer destination, byte channelId)
+        public void SendTo(Peer destination, byte channelId, PacketFlags flags = PacketFlags.None)
         {
-            Packet packet = GetPacket();
+            Packet packet = GetPacket(flags);
             destination.Send(channelId, ref packet);
         }
     }

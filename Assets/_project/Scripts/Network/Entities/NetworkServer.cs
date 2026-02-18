@@ -56,6 +56,11 @@ namespace Network._project.Scripts.Network.Entities
         public Host Server => _server;
 
         public List<Peer> ConnectedClients { get; } = new();
+        
+        ~NetworkServer()
+        {
+            Server?.Dispose();
+        }
 
         public void Stop()
         {
@@ -149,13 +154,13 @@ namespace Network._project.Scripts.Network.Entities
             }
         }
 
-        public bool SendMessageToAllClients(NetworkMessage message, byte channelID = 0)
+        public bool SendMessageToAllClients(NetworkMessage message, byte channelID = 0, PacketFlags flags = PacketFlags.None)
         {
             if (!Started ||  _server == null) return false;
 
             foreach (Peer client in ConnectedClients)
             {
-                message.SendTo(client, channelID);
+                message.SendTo(client, channelID, flags);
             }
 
             return true;

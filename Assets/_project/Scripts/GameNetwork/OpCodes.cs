@@ -5,7 +5,8 @@
         public enum Server : ushort
         {
             PlayerConnected = 1,
-            PlayerPosData = 2,
+            PlayerDisconnected = 2,
+            PlayerPosData = 10,
         }
         
         public enum Client : ushort

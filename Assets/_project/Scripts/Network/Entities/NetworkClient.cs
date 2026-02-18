@@ -57,6 +57,11 @@ namespace Network._project.Scripts.Network.Entities
         public Host Client => _client;
         public Peer? Server => _server;
 
+        ~NetworkClient()
+        {
+            Client?.Dispose();
+        }
+
         public void Disconnect()
         {
             if (!Connected) return;
@@ -123,12 +128,12 @@ namespace Network._project.Scripts.Network.Entities
             }
         }
 
-        public bool SendMessageToServer(NetworkMessage message, byte channelId = 0)
+        public bool SendMessageToServer(NetworkMessage message, byte channelId = 0, PacketFlags flags = PacketFlags.None)
         {
             // !_server.HasValue really is to shut up rider for when we use it because it shouldn't be null as long as we are connected  
             if (!Connected || !_server.HasValue) return false;
             
-            message.SendTo(_server.Value, channelId);
+            message.SendTo(_server.Value, channelId, flags);
             return true;
         }
 

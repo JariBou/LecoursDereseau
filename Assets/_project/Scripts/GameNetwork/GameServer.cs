@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using _project.Scripts.GameNetwork.Packets;
 using _project.Scripts.Network;
 using _project.Scripts.PluginInterfaces;
 using Network._project.Scripts.Network.Communication;
@@ -16,7 +17,7 @@ namespace _project.Scripts.GameNetwork
         [SerializeField] private Transform _player; // TEMP
         [SerializeField] private GameObject _playerPrefab; // TEMP
         private Dictionary<ushort, Transform> _players = new(); // TEMP type, to change
-        private Dictionary<ushort, Peer> _playerClient = new(); // TEMP type, to change
+        private Dictionary<ushort, Peer> _playerClientDic = new(); // TEMP type, to change
 
         private void Awake()
         {
@@ -37,20 +38,9 @@ namespace _project.Scripts.GameNetwork
 
         private void TickManagerOnNetworkTick()
         {
-            List<byte> bytes = new List<byte>();
-            NetworkMessage message = new NetworkMessage(bytes, (ushort)NetOpCodes.Server.PlayerPosData);
+            PlayerPositionsPacket positionsPacket = new(_players);
             
-            // Update player Positions
-            Serializer.SerializeInt(message.Data, _players.Count);
-            foreach (KeyValuePair<ushort, Transform> pair in _players)
-            {
-                Serializer.SerializeUShort(message.Data, pair.Key);
-                Debug.Log("Serializing pos data for player index: " + pair.Key);
-                Serializer.SerializeFloat(message.Data, pair.Value.position.x);
-                Serializer.SerializeFloat(message.Data, pair.Value.position.y);
-            }
-            
-            if (!_server.SendMessageToAllClients(message))
+            if (!_server.SendMessageToAllClients(positionsPacket.BuildNetworkMessage()))
             {
                 Debug.LogError("SendMessageToAllClients Error");
             }
@@ -64,17 +54,61 @@ namespace _project.Scripts.GameNetwork
                 case EventType.None:
                     break;
                 case EventType.Connect:
+                    OnPlayerConnected(evt);
                     break;
                 case EventType.Disconnect:
+                    Debug.Log("Player Disconnect : " + FindPlayerIndexFromPeer(evt.Source));
+                    OnPlayerDisconnected(evt);
                     break;
                 case EventType.Receive:
                     OnMessageReceived(evt);
                     break;
                 case EventType.Timeout:
+                    Debug.Log("Player Timeout : " + FindPlayerIndexFromPeer(evt.Source));
+                    OnPlayerTimeout(evt);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private void OnPlayerTimeout(NetworkEvent evt)
+        {
+            OnPlayerDisconnected(evt);
+        }
+
+        private void OnPlayerDisconnected(NetworkEvent evt)
+        {
+            ushort playerIndex = FindPlayerIndexFromPeer(evt.Source);
+            if (playerIndex == NetConstants.InvalidClientIndex)
+            {
+                return;
+            }
+            Destroy(_players[playerIndex].gameObject);
+            _players.Remove(playerIndex);
+            _playerClientDic.Remove(playerIndex);
+            
+            NetworkMessage msg = new NetworkMessage((ushort)NetOpCodes.Server.PlayerDisconnected);
+            Serializer.SerializeUShort(msg.Data, playerIndex);
+            _server.SendMessageToAllClients(msg);
+        }
+
+        private void OnPlayerConnected(NetworkEvent evt)
+        {
+            ushort newPlayerIndex;
+            if (_playerClientDic.Count > 0)
+            {
+                List<ushort> existingPlayerIndices = _playerClientDic.Keys.ToList();
+                existingPlayerIndices.Sort();
+                ushort last = existingPlayerIndices.Last();
+                newPlayerIndex = (ushort)(last + 1);
+            }
+            else
+            {
+                newPlayerIndex = 1;
+            }
+            
+            _playerClientDic[newPlayerIndex] = evt.Source;
         }
 
         private void OnMessageReceived(NetworkEvent evt)
@@ -84,11 +118,18 @@ namespace _project.Scripts.GameNetwork
                 uint readerPos = 0;
                 string clientInstanceId = Deserializer.DeserializeString(evt.Message.Data, ref readerPos);
 
+                // Create new player
                 GameObject player = Instantiate(_playerPrefab, transform);
-                ushort playerIndex = (ushort)(_players.Keys.Count+1); // TEMP
+                ushort playerIndex = FindPlayerIndexFromPeer(evt.Source);
+                if (playerIndex == NetConstants.InvalidClientIndex)
+                {
+                    Debug.LogError($"Found no player associated with Client with ID {evt.Source.ID}, IP: {evt.Source.IP}");
+                    return;
+                }
                 _players.Add(playerIndex, player.transform);
 
                 NetworkMessage msg = new(new List<byte>(), (ushort)NetOpCodes.Server.PlayerConnected);
+                // We set the first data as the new player's index (the one that just send the data
                 Serializer.SerializeUShort(msg.Data, playerIndex);
                 Serializer.SerializeInt(msg.Data, _players.Count);
                 foreach (KeyValuePair<ushort, Transform> pair in _players)
@@ -103,7 +144,6 @@ namespace _project.Scripts.GameNetwork
             {
                 uint readerPos = 0;
                 ushort pIndex = Deserializer.DeserializeUShort(evt.Message.Data, ref readerPos);
-                // Debug.Log($"Received Info for player with index {pIndex}");
                 float pX = Deserializer.DeserializeFloat(evt.Message.Data, ref readerPos);
                 float pY = Deserializer.DeserializeFloat(evt.Message.Data, ref readerPos);
                 if (pIndex == 0)
@@ -111,6 +151,18 @@ namespace _project.Scripts.GameNetwork
                     return;
                 }
                 _players[pIndex].transform.position = new Vector3(pX, pY, 0);
+            }
+        }
+
+        private ushort FindPlayerIndexFromPeer(Peer peer)
+        {
+            try
+            {
+                return _playerClientDic.First(pair => pair.Value.ID == peer.ID).Key;
+            }
+            catch (InvalidOperationException _)
+            {
+                return NetConstants.InvalidClientIndex;
             }
         }
     }

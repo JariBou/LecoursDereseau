@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using _project.Scripts.Network;
 using Network._project.Scripts.Network.Communication;
 using UnityEngine;
 

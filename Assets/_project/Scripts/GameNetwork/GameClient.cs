@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using _project.Scripts.GameNetwork.Packets;
-using _project.Scripts.Network;
 using _project.Scripts.PluginInterfaces;
 using Network._project.Scripts.Network.Communication;
 using Network._project.Scripts.Network.Entities;

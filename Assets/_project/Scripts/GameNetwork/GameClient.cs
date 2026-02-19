@@ -108,7 +108,7 @@ namespace _project.Scripts.GameNetwork
                 }
                 case (ushort)NetOpCodes.Server.PlayerPosData:
                 {
-                    PlayerPositionsPacket packet = new PlayerPositionsPacket().FromNetworkMessage(obj.Message);
+                    PlayerDataPacket packet = new PlayerDataPacket().FromNetworkMessage(obj.Message);
                     foreach ((ushort playerIndex, Vector3 position) in packet.PlayerPosDic)
                     {
                         if (playerIndex == _playerIndex)

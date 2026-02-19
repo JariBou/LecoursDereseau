@@ -1,31 +1,39 @@
 ﻿using System.Collections.Generic;
+using _project.Scripts.GameLogic;
+using _project.Scripts.Network;
 using Network._project.Scripts.Network.Communication;
 using UnityEngine;
 
 namespace _project.Scripts.GameNetwork.Packets
 {
-    public class PlayerPositionsPacket : PacketBase<PlayerPositionsPacket>
+    public class PlayerDataPacket : PacketBase<PlayerDataPacket>
     {
         public Dictionary<ushort, Vector3> PlayerPosDic = new();
+        public Dictionary<ushort, PlayerInput> PlayerInputDic = new();
 
-        public PlayerPositionsPacket()
+        public PlayerDataPacket()
         {
         }
-        
-        public PlayerPositionsPacket(Dictionary<ushort, Transform> playerTransformDic)
+
+        public PlayerDataPacket(Dictionary<ushort, PlayerInput> playerDic, Dictionary<ushort, Transform> playerTransformDic)
         {
+            foreach (KeyValuePair<ushort, PlayerInput> pair in playerDic)
+            {
+                PlayerInputDic[pair.Key] = pair.Value;
+            }
+
             foreach (KeyValuePair<ushort, Transform> pair in playerTransformDic)
             {
                 PlayerPosDic[pair.Key] = pair.Value.position;
             }
         }
-        
+
         public override ushort GetOpcode()
         {
-            return (ushort)NetOpCodes.Server.PlayerPosData;
+            return (ushort)NetOpCodes.Server.PlayerInputData;
         }
         
-        protected override PlayerPositionsPacket FromNetworkMessage_Impl(NetworkMessage message)
+        protected override PlayerDataPacket FromNetworkMessage_Impl(NetworkMessage message)
         {
             uint readerPos = 0;
             int playerCount = Deserializer.DeserializeInt(message.Data, ref readerPos);

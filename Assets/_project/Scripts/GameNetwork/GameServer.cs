@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using _project.Scripts.GameLogic;
 using _project.Scripts.GameNetwork.Packets;
 using _project.Scripts.Network;
 using _project.Scripts.PluginInterfaces;
@@ -17,6 +18,8 @@ namespace _project.Scripts.GameNetwork
         [SerializeField] private Transform _player; // TEMP
         [SerializeField] private GameObject _playerPrefab; // TEMP
         private Dictionary<ushort, Transform> _players = new(); // TEMP type, to change
+        private Dictionary<ushort, PlayerInput> _playersWithInputs = new(); // TEMP type, to change
+
         private Dictionary<ushort, Peer> _playerClientDic = new(); // TEMP type, to change
 
         private void Awake()
@@ -47,9 +50,9 @@ namespace _project.Scripts.GameNetwork
             {
                 _server.Stop();
             }
-            PlayerPositionsPacket positionsPacket = new(_players);
+            PlayerDataPacket dataPacket = new(_players);
             
-            if (!_server.SendMessageToAllClients(positionsPacket.BuildNetworkMessage()))
+            if (!_server.SendMessageToAllClients(dataPacket.BuildNetworkMessage()))
             {
                 Debug.LogError("SendMessageToAllClients Error");
             }
@@ -145,11 +148,12 @@ namespace _project.Scripts.GameNetwork
                 {
                     Serializer.SerializeUShort(msg.Data, pair.Key);
                 }
-                
+
                 _server.SendMessageToAllClients(msg);
-                
+
                 Debug.Log("Client connected with instance ID: " + clientInstanceId);
-            } else if (evt.Message.OpCode == (ushort)NetOpCodes.Client.PlayerPos)
+            }
+            else if (evt.Message.OpCode == (ushort)NetOpCodes.Client.PlayerPos)
             {
                 uint readerPos = 0;
                 ushort pIndex = Deserializer.DeserializeUShort(evt.Message.Data, ref readerPos);
@@ -160,6 +164,19 @@ namespace _project.Scripts.GameNetwork
                     return;
                 }
                 _players[pIndex].transform.position = new Vector3(pX, pY, 0);
+            }
+            else if (evt.Message.OpCode == (ushort)NetOpCodes.Client.PlayerInput)
+            {
+                uint readerPos = 0;
+                ushort pIndex = Deserializer.DeserializeUShort(evt.Message.Data, ref readerPos);
+                PlayerInput savedInputData = PlayerInput.DeSerialize(evt.Message.Data, ref readerPos);
+
+                if (pIndex == 0)
+                {
+                    return;
+                }
+                // Save input here
+                _playersWithInputs[pIndex] = savedInputData;
             }
         }
 

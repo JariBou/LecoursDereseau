@@ -161,13 +161,14 @@ namespace _project.Scripts.GameLogic
                 return;
             }
             List<byte> byteArray = new();
-            /*            Serializer.SerializeUShort(byteArray, _gameClient.PlayerIndex);
-                        Serializer.SerializeFloat(byteArray, transform.position.x);
+            /*          Serializer.SerializeFloat(byteArray, transform.position.x);
                         Serializer.SerializeFloat(byteArray, transform.position.y);*/
 
             // Parse 
+            Serializer.SerializeUShort(byteArray, _gameClient.PlayerIndex);
             LastRecordedInput.Serialize(byteArray);
             NetworkClient.SendMessageToServer(new NetworkMessage(byteArray, (ushort)NetOpCodes.Client.PlayerInput));
+            LastRecordedInput.Rreset();
         }
 
         void FixedUpdate()

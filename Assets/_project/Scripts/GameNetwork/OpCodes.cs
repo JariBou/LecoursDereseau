@@ -6,7 +6,7 @@
         {
             PlayerConnected = 1,
             PlayerDisconnected = 2,
-            PlayerPosData = 10,
+            PlayerData = 10,
             PlayerInputData = 67,
         }
         

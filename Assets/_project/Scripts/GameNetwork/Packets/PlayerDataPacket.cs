@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using _project.Scripts.GameLogic;
 using _project.Scripts.Network;
 using Network._project.Scripts.Network.Communication;
@@ -9,28 +10,30 @@ namespace _project.Scripts.GameNetwork.Packets
     public class PlayerDataPacket : PacketBase<PlayerDataPacket>
     {
         public Dictionary<ushort, Vector3> PlayerPosDic = new();
+        public Dictionary<ushort, Vector3> PlayerSpeedDic = new();
         public Dictionary<ushort, PlayerInput> PlayerInputDic = new();
 
         public PlayerDataPacket()
         {
         }
 
-        public PlayerDataPacket(Dictionary<ushort, PlayerInput> playerDic, Dictionary<ushort, Transform> playerTransformDic)
+        public PlayerDataPacket(Dictionary<ushort, PlayerInput> playerDic, Dictionary<ushort, ReplicatedPlayerScript> playerTransformDic)
         {
             foreach (KeyValuePair<ushort, PlayerInput> pair in playerDic)
             {
                 PlayerInputDic[pair.Key] = pair.Value;
             }
 
-            foreach (KeyValuePair<ushort, Transform> pair in playerTransformDic)
+            foreach (KeyValuePair<ushort, ReplicatedPlayerScript> pair in playerTransformDic)
             {
-                PlayerPosDic[pair.Key] = pair.Value.position;
+                PlayerPosDic[pair.Key] = pair.Value.GetPos();
+                PlayerSpeedDic[pair.Key] = pair.Value.GetSpeed();
             }
         }
 
         public override ushort GetOpcode()
         {
-            return (ushort)NetOpCodes.Server.PlayerInputData;
+            return (ushort)NetOpCodes.Server.PlayerData;
         }
         
         protected override PlayerDataPacket FromNetworkMessage_Impl(NetworkMessage message)
@@ -40,9 +43,13 @@ namespace _project.Scripts.GameNetwork.Packets
             for (int i = 0; i < playerCount; i++)
             {
                 ushort playerIndex = Deserializer.DeserializeUShort(message.Data, ref readerPos);
-                float x =  Deserializer.DeserializeFloat(message.Data, ref readerPos);
-                float y =  Deserializer.DeserializeFloat(message.Data, ref readerPos);
-                PlayerPosDic[playerIndex] = new Vector3(x, y, 0);
+                float tX =  Deserializer.DeserializeFloat(message.Data, ref readerPos);
+                float tY =  Deserializer.DeserializeFloat(message.Data, ref readerPos);
+                float sX =  Deserializer.DeserializeFloat(message.Data, ref readerPos);
+                float sY =  Deserializer.DeserializeFloat(message.Data, ref readerPos);
+                PlayerPosDic[playerIndex] = new Vector3(tX, tY, 0);
+                PlayerSpeedDic[playerIndex] = new Vector3(sX, sY, 0);
+                PlayerInputDic[playerIndex] = PlayerInput.DeSerialize(message.Data, ref readerPos);
             }
 
             return this;
@@ -52,12 +59,20 @@ namespace _project.Scripts.GameNetwork.Packets
         {
             List<byte> data = new List<byte>();
             // Update player Positions
-            Serializer.SerializeInt(data, PlayerPosDic.Count);
-            foreach ((ushort pIndex, Vector3 position) in PlayerPosDic)
+            ushort[] pIndexes = PlayerPosDic.Keys.ToArray();
+            Serializer.SerializeInt(data, pIndexes.Length);
+            foreach (ushort playerIndex in pIndexes)
             {
-                Serializer.SerializeUShort(data, pIndex);
+                Vector3 position = PlayerPosDic[playerIndex];
+                Vector3 speed = PlayerSpeedDic[playerIndex];
+                PlayerInput input = PlayerInputDic[playerIndex];
+                
+                Serializer.SerializeUShort(data, playerIndex);
                 Serializer.SerializeFloat(data, position.x);
                 Serializer.SerializeFloat(data, position.y);
+                Serializer.SerializeFloat(data, speed.x);
+                Serializer.SerializeFloat(data, speed.y);
+                input.Serialize(data);
             }
             return data;
         }

@@ -19,8 +19,8 @@ namespace _project.Scripts.GameLogic
 
         public void Rreset()
         {
-            MoveLeft = false;
-            MoveRight = false;
+            // MoveLeft = false;
+            // MoveRight = false;
             //MoveCancelled = false;
             Attack = false;
             Jump = false;
@@ -51,7 +51,7 @@ namespace _project.Scripts.GameLogic
 
     }   
 
-    public class PlayerScript : MonoBehaviour
+    public class PlayerMovementScript : ReplicatedPlayerScriptBase
     {
 
         [SerializeField] private GameClient _gameClient;
@@ -59,38 +59,19 @@ namespace _project.Scripts.GameLogic
 
         PlayerInputs inputs;
         Vector2 MvmtValue;
-        public float speed = 10;
-        public bool isGrounded;
-        private bool pendingJump = false;
-        public float jumpValue = 3.0f;
-        private float currentJump = 0.0f;
 
-
-        private Rigidbody2D rigidbody;
-
-        private PlayerInput LastRecordedInput;
-
-        private void Update()
-        {
-            float xAxis = Input.GetAxis("Horizontal");
-            float yAxis = Input.GetAxis("Vertical");
-
-            if (Input.GetKeyDown(KeyCode.F1))
-            {
-                NetworkClient.Disconnect();
-            }
-            
-            transform.position += new Vector3(xAxis, yAxis, 0).normalized *  Time.deltaTime;
-        }
+        private PlayerInput LastRecordedInput = new ();
 
         private void Awake()
         {
-            rigidbody = GetComponent<Rigidbody2D>();
+            rb = GetComponent<Rigidbody2D>();
 
             inputs = new PlayerInputs();
 
-            // Deplacements
-            inputs.FightPlayer.Move.performed += ctx => RecordMove(ctx);
+            // Deplacement
+            inputs.FightPlayer.Move.performed += RecordMove;
+            inputs.FightPlayer.Move.canceled += RecordMove;
+            // inputs.FightPlayer.Move.performed += ctx => RecordMove(ctx);
             //inputs.FightPlayer.Move.performed += ctx => MvmtValue = ctx.ReadValue<Vector2>();
             //inputs.FightPlayer.Move.canceled += ctx => RecordInput(ctx);
             //inputs.FightPlayer.Move.canceled += ctx => MvmtValue = Vector2.zero;
@@ -100,7 +81,7 @@ namespace _project.Scripts.GameLogic
             //inputs.FightPlayer.Jump.started += ctx => TryJump();
 
             // Attack
-            inputs.FightPlayer.Attack.started += ctx => RecordAttack(ctx);
+            inputs.FightPlayer.Attack.started += RecordAttack;
             //inputs.FightPlayer.Attack.started += ctx => TryAttack();
 
         }
@@ -127,19 +108,20 @@ namespace _project.Scripts.GameLogic
 
         private void OnDisable()
         {
+            TickManager.NetworkTick -= TickManagerOnNetworkTick;
             inputs.FightPlayer.Disable();
         }
 
         private void RecordMove(InputAction.CallbackContext ctx)
         {
             Vector2 temp  = ctx.ReadValue<Vector2>();
+            LastRecordedInput.MoveLeft = false;
+            LastRecordedInput.MoveRight = false;
             if (temp.x > 0)
             {
-                LastRecordedInput.MoveLeft = false;
                 LastRecordedInput.MoveRight = true;
             }else if (temp.x < 0)
             {
-                LastRecordedInput.MoveRight = false;
                 LastRecordedInput.MoveLeft = true;
             }
         }
@@ -172,34 +154,38 @@ namespace _project.Scripts.GameLogic
 
         void FixedUpdate()
         {
-            rigidbody.AddForce(new Vector2(MvmtValue.x * speed, 0f));
-
-            if (pendingJump)
+            if (Input.GetKeyDown(KeyCode.F1))
             {
-                rigidbody.AddForce(new Vector2(0f, jumpValue), ForceMode2D.Impulse);
-                pendingJump = false;
+                NetworkClient.Disconnect();
             }
-
-            // CheckGround
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, -Vector2.up);
-
-            Debug.DrawRay(transform.position, -Vector2.up);
-
-            isGrounded = false;
-            if(hit)
-            {
-                //Debug.Log(hit.transform.gameObject.name);
-                //Debug.Log("Distance to ground: " + Vector3.Distance(hit.point, transform.position));
-             
-                if((Vector3.Distance(hit.point, transform.position) <= 2.0f) 
-                    && (hit.transform.gameObject.tag == "ground"))
-                {
-                    isGrounded = true;
-                } else
-                {
-                    isGrounded = false;
-                }
-            } 
+            // rigidbody.AddForce(new Vector2(MvmtValue.x * speed, 0f));
+            //
+            // if (pendingJump)
+            // {
+            //     rigidbody.AddForce(new Vector2(0f, jumpValue), ForceMode2D.Impulse);
+            //     pendingJump = false;
+            // }
+            //
+            // // CheckGround
+            // RaycastHit2D hit = Physics2D.Raycast(transform.position, -Vector2.up);
+            //
+            // Debug.DrawRay(transform.position, -Vector2.up);
+            //
+            // isGrounded = false;
+            // if(hit)
+            // {
+            //     //Debug.Log(hit.transform.gameObject.name);
+            //     //Debug.Log("Distance to ground: " + Vector3.Distance(hit.point, transform.position));
+            //  
+            //     if((Vector3.Distance(hit.point, transform.position) <= 2.0f) 
+            //         && (hit.transform.gameObject.tag == "ground"))
+            //     {
+            //         isGrounded = true;
+            //     } else
+            //     {
+            //         isGrounded = false;
+            //     }
+            // } 
         }
     }
 }

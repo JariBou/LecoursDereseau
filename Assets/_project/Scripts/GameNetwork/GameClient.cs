@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using _project.Scripts.GameLogic;
 using _project.Scripts.GameNetwork.Packets;
 using _project.Scripts.PluginInterfaces;
 using Network._project.Scripts.Network.Communication;
@@ -18,8 +20,8 @@ namespace _project.Scripts.GameNetwork
         public ushort PlayerIndex => _playerIndex;
 
         [SerializeField] private GameObject _playerPrefab; // TEMP
-        private Dictionary<ushort, Transform> _players = new(); // TEMP type, to change
-        [SerializeField] private Transform _player; // TEMP type, to change
+        private Dictionary<ushort, ReplicatedPlayerScriptBase> _players = new(); // TEMP type, to change
+        [SerializeField] private ReplicatedPlayerScriptBase _player; // TEMP type, to change
         private ushort _playerIndex = NetConstants.InvalidClientIndex;
 
         private void Start()
@@ -60,7 +62,7 @@ namespace _project.Scripts.GameNetwork
         {
             if (obj.Type == EventType.Disconnect)
             {
-                foreach (KeyValuePair<ushort, Transform> pair in _players)
+                foreach (KeyValuePair<ushort, ReplicatedPlayerScriptBase> pair in _players)
                 {
                     ushort playerIndex = pair.Key;
                     if (playerIndex == _playerIndex)
@@ -99,27 +101,37 @@ namespace _project.Scripts.GameNetwork
                         {
                             _players.Add(playerIndex,
                                 playerIndex == _playerIndex
-                                    ? _player
-                                    : Instantiate(_playerPrefab, transform).transform);
+                                    ? _player.GetComponent<PlayerMovementScript>()
+                                    : Instantiate(_playerPrefab, transform).GetComponent<ReplicatedPlayerScript>());
                         }
                     }
 
                     break;
                 }
-                case (ushort)NetOpCodes.Server.PlayerPosData:
+                case (ushort)NetOpCodes.Server.PlayerData:
                 {
                     PlayerDataPacket packet = new PlayerDataPacket().FromNetworkMessage(obj.Message);
-                    foreach ((ushort playerIndex, Vector3 position) in packet.PlayerPosDic)
+                    ushort[] pIndexes = packet.PlayerPosDic.Keys.ToArray();
+                    foreach (ushort playerIndex in pIndexes)
                     {
+                        Vector3 position = packet.PlayerPosDic[playerIndex];
+                        Vector3 speed = packet.PlayerSpeedDic[playerIndex];
+                        
+                        ReplicatedPlayerScriptBase player = _players[playerIndex];
+                        player.ApplyInput(packet.PlayerInputDic[playerIndex]);
                         if (playerIndex == _playerIndex)
                         {
-                            float magnitude = (position - _player.position).magnitude;
-                            if (magnitude < NetConstants.PlayerPositionReconciliationErrorMargin)
+                            float posDiff = (position - _player.GetPos()).magnitude;
+                            float speedDiff = (speed - _player.GetSpeed()).magnitude;
+                            if (posDiff < NetConstants.PlayerPositionReconciliationErrorMargin 
+                                && speedDiff < NetConstants.PlayerSpeedReconciliationErrorMargin)
                             {
                                 continue;
                             }
                         }
-                        _players[playerIndex].position = position;
+
+                        player.SetPos(position);
+                        player.SetSpeed(speed);
                     }
 
                     break;

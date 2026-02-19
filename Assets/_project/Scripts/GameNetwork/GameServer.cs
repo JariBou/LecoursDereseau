@@ -16,7 +16,7 @@ namespace _project.Scripts.GameNetwork
         private NetworkServer _server = new();
         [SerializeField] private Transform _player; // TEMP
         [SerializeField] private GameObject _playerPrefab; // TEMP
-        private Dictionary<ushort, Transform> _players = new(); // TEMP type, to change
+        private Dictionary<ushort, ReplicatedPlayerScript> _players = new(); // TEMP type, to change
         private Dictionary<ushort, PlayerInput> _playersWithInputs = new(); // TEMP type, to change
 
         private Dictionary<ushort, Peer> _playerClientDic = new(); // TEMP type, to change
@@ -30,11 +30,21 @@ namespace _project.Scripts.GameNetwork
 
         private void OnEnable()
         {
+            TickManager.PreUpdate += TickManagerOnPreUpdate;
             TickManager.NetworkTick += TickManagerOnNetworkTick;
         }
-        
+
+        private void TickManagerOnPreUpdate()
+        {
+            foreach ((ushort pIndex, ReplicatedPlayerScript playerScript) in _players)
+            {
+                playerScript.ApplyInputs(_playersWithInputs.GetValueOrDefault(pIndex, new PlayerInput()));
+            }
+        }
+
         private void OnDisable()
         {
+            TickManager.PreUpdate -= TickManagerOnPreUpdate;
             TickManager.NetworkTick -= TickManagerOnNetworkTick;
         }
 
@@ -137,13 +147,14 @@ namespace _project.Scripts.GameNetwork
                     Debug.LogError($"Found no player associated with Client with ID {evt.Source.ID}, IP: {evt.Source.IP}");
                     return;
                 }
-                _players.Add(playerIndex, player.transform);
+                _players.Add(playerIndex, player.GetComponent<ReplicatedPlayerScript>());
+                _playersWithInputs.Add(playerIndex, new PlayerInput());
 
                 NetworkMessage msg = new(new List<byte>(), (ushort)NetOpCodes.Server.PlayerConnected);
                 // We set the first data as the new player's index (the one that just send the data
                 Serializer.SerializeUShort(msg.Data, playerIndex);
                 Serializer.SerializeInt(msg.Data, _players.Count);
-                foreach (KeyValuePair<ushort, Transform> pair in _players)
+                foreach (KeyValuePair<ushort, ReplicatedPlayerScript> pair in _players)
                 {
                     Serializer.SerializeUShort(msg.Data, pair.Key);
                 }
@@ -170,7 +181,7 @@ namespace _project.Scripts.GameNetwork
                 ushort pIndex = Deserializer.DeserializeUShort(evt.Message.Data, ref readerPos);
                 PlayerInput savedInputData = PlayerInput.DeSerialize(evt.Message.Data, ref readerPos);
 
-                if (pIndex == 0)
+                if (pIndex == NetConstants.InvalidClientIndex)
                 {
                     return;
                 }

@@ -7,8 +7,8 @@ namespace _project.Scripts.GameLogic
     {
         private void OnTriggerEnter(Collider other)
         {
-            PlayerScript playerScript = other.GetComponent<PlayerScript>();
-            if (playerScript != null)
+            PlayerMovementScript playerMovementScript = other.GetComponent<PlayerMovementScript>();
+            if (playerMovementScript != null)
             {
                 Debug.Log("Hit Player!!");
                 // playerScript.TakeDamage()

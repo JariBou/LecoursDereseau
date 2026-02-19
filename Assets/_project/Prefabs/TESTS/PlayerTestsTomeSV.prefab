@@ -10,11 +10,11 @@ GameObject:
   m_Component:
   - component: {fileID: 114857877802497934}
   - component: {fileID: 2582519824245080461}
-  - component: {fileID: -2329384773698172123}
-  - component: {fileID: 1149401078432544093}
-  - component: {fileID: 4640108141371434415}
+  - component: {fileID: 2673556882657329818}
+  - component: {fileID: 2924449159508181465}
+  - component: {fileID: 1194962780788138431}
   m_Layer: 0
-  m_Name: PlayerTestsTome
+  m_Name: PlayerTestsTomeSV
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -90,7 +90,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!50 &-2329384773698172123
+--- !u!50 &2673556882657329818
 Rigidbody2D:
   serializedVersion: 5
   m_ObjectHideFlags: 0
@@ -117,7 +117,7 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
---- !u!114 &1149401078432544093
+--- !u!114 &2924449159508181465
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -129,10 +129,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ad19545fbdc4410a05771218ae9dea7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 3
+  speed: 10
   isGrounded: 0
   jumpValue: 15
---- !u!58 &4640108141371434415
+--- !u!58 &1194962780788138431
 CircleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

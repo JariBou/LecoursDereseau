@@ -87,6 +87,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2eaea777839f4d75afba8b9824c1cea4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animator: {fileID: 1578127266057880710}
   _gameClient: {fileID: 0}
   speed: 10
   isGrounded: 0

@@ -7,12 +7,15 @@
             PlayerConnected = 1,
             PlayerDisconnected = 2,
             PlayerPosData = 10,
+            PlayerInputData = 67,
         }
         
         public enum Client : ushort
         {
             PlayerInfo = 1,
-            PlayerPos = 2 // TEMP
+            PlayerPos = 2, // TEMP
+            PlayerInput = 69,
+
         }
     }
 }

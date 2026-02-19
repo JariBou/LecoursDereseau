@@ -1,12 +1,57 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using _project.Scripts.GameNetwork;
 using _project.Scripts.Network;
 using Network._project.Scripts.Network.Communication;
 using Network._project.Scripts.Network.Entities;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace _project.Scripts.GameLogic
 {
+
+    public class PlayerInput
+    {
+        public bool MoveLeft = false;
+        public bool MoveRight = false;
+        //public bool MoveCancelled = false;
+        public bool Attack = false;
+        public bool Jump = false;
+
+        public void Rreset()
+        {
+            MoveLeft = false;
+            MoveRight = false;
+            //MoveCancelled = false;
+            Attack = false;
+            Jump = false;
+        }
+
+        public void Serialize(List<byte> bytes)
+        {
+            byte data = 0;
+            data |= (byte)((MoveLeft ? 1 : 0) << 0);
+            data |= (byte)((MoveRight? 1 : 0) << 2);
+            data |= (byte)((Attack ? 1 : 0) << 3);
+            data |= (byte)((Jump ? 1 : 0) << 4);
+
+            Serializer.SerializeByte(bytes, data);
+        }
+
+        public static PlayerInput DeSerialize(List<byte> bytes, ref uint readerPos)
+        {
+            byte data = Deserializer.DeserializeByte(bytes, ref readerPos);
+            PlayerInput newInput = new PlayerInput();
+            newInput.MoveLeft = ((1 << 0) & data) > 0;
+            newInput.MoveRight = ((1 << 2) & data) > 0;
+            newInput.Attack = ((1 << 3) & data) > 0;
+            newInput.Jump = ((1 << 4) & data) > 0;
+
+            return newInput;
+        }
+
+    }   
+
     public class PlayerScript : MonoBehaviour
     {
 
@@ -23,6 +68,9 @@ namespace _project.Scripts.GameLogic
 
 
         private Rigidbody2D rigidbody;
+
+        private PlayerInput LastRecordedInput;
+
         private void Update()
         {
             float xAxis = Input.GetAxis("Horizontal");
@@ -43,16 +91,18 @@ namespace _project.Scripts.GameLogic
             inputs = new PlayerInputs();
 
             // Deplacements
-            inputs.FightPlayer.Move.performed += ctx => RecordInput();
-            inputs.FightPlayer.Move.performed += ctx => MvmtValue = ctx.ReadValue<Vector2>();
-            inputs.FightPlayer.Move.canceled += ctx => MvmtValue = Vector2.zero;
+            inputs.FightPlayer.Move.performed += ctx => RecordMove(ctx);
+            //inputs.FightPlayer.Move.performed += ctx => MvmtValue = ctx.ReadValue<Vector2>();
+            //inputs.FightPlayer.Move.canceled += ctx => RecordInput(ctx);
+            //inputs.FightPlayer.Move.canceled += ctx => MvmtValue = Vector2.zero;
+
             // Jump
-            inputs.FightPlayer.Jump.started += ctx => RecordInput();
-            inputs.FightPlayer.Jump.started += ctx => TryJump();
+            inputs.FightPlayer.Jump.started += ctx => RecordJump(ctx);
+            //inputs.FightPlayer.Jump.started += ctx => TryJump();
 
             // Attack
-            inputs.FightPlayer.Attack.started += ctx => RecordInput();
-            inputs.FightPlayer.Attack.started += ctx => TryAttack();
+            inputs.FightPlayer.Attack.started += ctx => RecordAttack(ctx);
+            //inputs.FightPlayer.Attack.started += ctx => TryAttack();
 
         }
 
@@ -81,10 +131,29 @@ namespace _project.Scripts.GameLogic
             inputs.FightPlayer.Disable();
         }
 
-        void RecordInput(/*Input package*/)
+        private void RecordMove(InputAction.CallbackContext ctx)
         {
+            Vector2 temp  = ctx.ReadValue<Vector2>();
+            if (temp.x > 0)
+            {
+                LastRecordedInput.MoveLeft = false;
+                LastRecordedInput.MoveRight = true;
+            }else if (temp.x < 0)
+            {
+                LastRecordedInput.MoveRight = false;
+                LastRecordedInput.MoveLeft = true;
+            }
         }
 
+        private void RecordJump(InputAction.CallbackContext ctx)
+        {
+            LastRecordedInput.Jump = true;
+        }
+
+        private void RecordAttack(InputAction.CallbackContext ctx)
+        {
+            LastRecordedInput.Attack = true;
+        }
         private void TickManagerOnNetworkTick()
         {
             if (!NetworkClient.Connected || _gameClient.PlayerIndex == NetConstants.InvalidClientIndex)
@@ -92,10 +161,13 @@ namespace _project.Scripts.GameLogic
                 return;
             }
             List<byte> byteArray = new();
-            Serializer.SerializeUShort(byteArray, _gameClient.PlayerIndex);
-            Serializer.SerializeFloat(byteArray, transform.position.x);
-            Serializer.SerializeFloat(byteArray, transform.position.y);
-            NetworkClient.SendMessageToServer(new NetworkMessage(byteArray, (ushort)NetOpCodes.Client.PlayerPos));
+            /*            Serializer.SerializeUShort(byteArray, _gameClient.PlayerIndex);
+                        Serializer.SerializeFloat(byteArray, transform.position.x);
+                        Serializer.SerializeFloat(byteArray, transform.position.y);*/
+
+            // Parse 
+            LastRecordedInput.Serialize(byteArray);
+            NetworkClient.SendMessageToServer(new NetworkMessage(byteArray, (ushort)NetOpCodes.Client.PlayerInput));
         }
 
         void FixedUpdate()

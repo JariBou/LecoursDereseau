@@ -43,8 +43,8 @@ namespace _project.Scripts.GameLogic
         
         public void Hurt()
         {
-            animator.SetTrigger("Hurt");
             CurrentHealth += GameConstants.BaseAttackDMG;
+            animator.SetTrigger("Hurt");
             float knockbackFullModifier = GameConstants.BaseAttackKnockback;
             if (CurrentHealth > 0)
                 knockbackFullModifier += GameConstants.HPKnockBackModifier * CurrentHealth;

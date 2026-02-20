@@ -40,7 +40,7 @@ namespace _project.Scripts.GameNetwork
             foreach ((ushort pIndex, ReplicatedPlayerScript playerScript) in _players)
             {
                 playerScript.ApplyInputs(_playersWithInputs.GetValueOrDefault(pIndex, new PlayerInput()));
-                playerScript.Hurt();
+                //playerScript.Hurt();
             }
         }
 

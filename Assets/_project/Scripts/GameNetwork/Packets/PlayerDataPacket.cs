@@ -75,8 +75,7 @@ namespace _project.Scripts.GameNetwork.Packets
                 Vector3 position = PlayerPosDic[playerIndex];
                 Vector3 speed = PlayerSpeedDic[playerIndex];
                 PlayerInput input = PlayerInputDic[playerIndex];
-                PlayerHitPacket hitPacket = PlayerHitPacketDic[playerIndex];
-
+                PlayerHitPacket hitPacket = PlayerHitPacketDic.TryGetValue(playerIndex, out PlayerHitPacket hit) ? hit : new PlayerHitPacket();
                 Serializer.SerializeUShort(data, playerIndex);
                 Serializer.SerializeFloat(data, position.x);
                 Serializer.SerializeFloat(data, position.y);

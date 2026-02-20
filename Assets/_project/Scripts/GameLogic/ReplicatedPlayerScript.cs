@@ -5,12 +5,14 @@ namespace _project.Scripts.GameLogic
 {
     public class ReplicatedPlayerScriptBase : MonoBehaviour
     {
-        public float speed = 2.5f;
+        public float speed = GameConstants.DefaultPlayerSpeed;
         public bool isGrounded;
         protected bool pendingJump = false;
-        public float jumpValue = 10f;
+        public float jumpValue = GameConstants.JumpForce;
         protected float currentJump = 0f;
-        
+        float CurrentHealth = 0.0f;
+        bool isAlive = false;
+
         protected Rigidbody2D rb;
         [SerializeField] protected Animator animator;
         
@@ -42,6 +44,14 @@ namespace _project.Scripts.GameLogic
         public void Hurt()
         {
             animator.SetTrigger("Hurt");
+            CurrentHealth += GameConstants.BaseAttackDMG;
+            float knockbackFullModifier = GameConstants.BaseAttackKnockback;
+            if (CurrentHealth > 0)
+                knockbackFullModifier += GameConstants.HPKnockBackModifier * CurrentHealth;
+
+            Vector2 KnockbackVector = new Vector2(knockbackFullModifier, knockbackFullModifier);
+
+            rb.linearVelocity *= KnockbackVector;
         }
 
         private void Update()

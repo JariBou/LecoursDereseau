@@ -9,6 +9,38 @@ using UnityEngine.InputSystem;
 namespace _project.Scripts.GameLogic
 {
 
+    public class PlayerHitPacket
+    {
+        public bool gotHurt = false;
+        public bool tryAttack = false;
+
+        public void Rreset()
+        {
+            gotHurt = false;
+            tryAttack = false;
+        }
+
+        public void Serialize(List<byte> bytes)
+        {
+            byte data = 0;
+            data |= (byte)((gotHurt ? 1 : 0) << 0);
+            data |= (byte)((tryAttack? 1 : 0) << 1);
+
+            Serializer.SerializeByte(bytes, data);
+        }
+
+        public static PlayerHitPacket DeSerialize(List<byte> bytes, ref uint readerPos)
+        {
+            byte data = Deserializer.DeserializeByte(bytes, ref readerPos);
+            PlayerHitPacket newPacket = new PlayerHitPacket();
+            newPacket.gotHurt = ((1 << 0) & data) > 0;
+            newPacket.tryAttack = ((1 << 1) & data) > 0;
+
+            return newPacket;
+        }
+
+    }
+
     public class PlayerInput
     {
         public bool MoveLeft = false;
@@ -16,7 +48,6 @@ namespace _project.Scripts.GameLogic
         //public bool MoveCancelled = false;
         public bool Attack = false;
         public bool Jump = false;
-
         public void Rreset()
         {
             // MoveLeft = false;
@@ -45,7 +76,6 @@ namespace _project.Scripts.GameLogic
             newInput.MoveRight = ((1 << 2) & data) > 0;
             newInput.Attack = ((1 << 3) & data) > 0;
             newInput.Jump = ((1 << 4) & data) > 0;
-
             return newInput;
         }
 
@@ -61,6 +91,7 @@ namespace _project.Scripts.GameLogic
         Vector2 MvmtValue;
 
         private PlayerInput LastRecordedInput = new ();
+        private PlayerHitPacket packetHit= new();
 
         private void Awake()
         {
@@ -89,6 +120,7 @@ namespace _project.Scripts.GameLogic
         private void TryAttack()
         {
             Debug.Log("Attack");
+            packetHit.tryAttack = true;
         }
 
         private void TryJump()
@@ -135,6 +167,13 @@ namespace _project.Scripts.GameLogic
         {
             LastRecordedInput.Attack = true;
         }
+
+
+        public void RecordDamage()
+        {
+            packetHit.gotHurt = true;
+        }
+
         private void TickManagerOnNetworkTick()
         {
             if (!NetworkClient.Connected || _gameClient.PlayerIndex == NetConstants.InvalidClientIndex)
@@ -145,11 +184,17 @@ namespace _project.Scripts.GameLogic
             /*          Serializer.SerializeFloat(byteArray, transform.position.x);
                         Serializer.SerializeFloat(byteArray, transform.position.y);*/
 
-            // Parse 
+            // Parse Inputs
             Serializer.SerializeUShort(byteArray, _gameClient.PlayerIndex);
             LastRecordedInput.Serialize(byteArray);
             NetworkClient.SendMessageToServer(new NetworkMessage(byteArray, (ushort)NetOpCodes.Client.PlayerInput));
             LastRecordedInput.Rreset();
+            // Parse Hit packet
+            Serializer.SerializeUShort(byteArray, _gameClient.PlayerIndex);
+            packetHit.Serialize(byteArray);
+            NetworkClient.SendMessageToServer(new NetworkMessage(byteArray, (ushort)NetOpCodes.Client.PlayerHit));
+            packetHit.Rreset();
+
         }
 
         void FixedUpdate()

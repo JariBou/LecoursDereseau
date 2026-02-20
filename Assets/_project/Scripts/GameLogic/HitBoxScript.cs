@@ -11,7 +11,7 @@ namespace _project.Scripts.GameLogic
             if (playerMovementScript != null)
             {
                 Debug.Log("Hit Player!!");
-                // playerScript.TakeDamage()
+                playerMovementScript.RecordDamage();
             }
         }
     }

@@ -7,6 +7,7 @@
             PlayerConnected = 1,
             PlayerDisconnected = 2,
             PlayerData = 10,
+            PlayerHitData = 11,
             PlayerInputData = 67,
         }
         
@@ -14,6 +15,7 @@
         {
             PlayerInfo = 1,
             PlayerPos = 2, // TEMP
+            PlayerHit = 3,
             PlayerInput = 69,
 
         }

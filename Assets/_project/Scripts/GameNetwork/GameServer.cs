@@ -18,6 +18,7 @@ namespace _project.Scripts.GameNetwork
         [SerializeField] private GameObject _playerPrefab; // TEMP
         private Dictionary<ushort, ReplicatedPlayerScript> _players = new(); // TEMP type, to change
         private Dictionary<ushort, PlayerInput> _playersWithInputs = new(); // TEMP type, to change
+        private Dictionary<ushort, PlayerHitPacket> _playerHitDictionnary = new(); // TEMP type, to change
 
         private Dictionary<ushort, Peer> _playerClientDic = new(); // TEMP type, to change
 
@@ -39,6 +40,7 @@ namespace _project.Scripts.GameNetwork
             foreach ((ushort pIndex, ReplicatedPlayerScript playerScript) in _players)
             {
                 playerScript.ApplyInputs(_playersWithInputs.GetValueOrDefault(pIndex, new PlayerInput()));
+                playerScript.Hurt();
             }
         }
 
@@ -59,12 +61,15 @@ namespace _project.Scripts.GameNetwork
             {
                 _server.Stop();
             }
-            PlayerDataPacket dataPacket = new(_playersWithInputs, _players);
+
+            // Send data to all players
+            PlayerDataPacket dataPacket = new(_playersWithInputs, _players, _playerHitDictionnary);
             
             if (!_server.SendMessageToAllClients(dataPacket.BuildNetworkMessage()))
             {
                 Debug.LogError("SendMessageToAllClients Error");
             }
+
             _server.PollEvents(NetworkEventCallback);
         }
 
@@ -187,6 +192,17 @@ namespace _project.Scripts.GameNetwork
                 }
                 // Save input here
                 _playersWithInputs[pIndex] = savedInputData;
+            } else if (evt.Message.OpCode == (ushort)NetOpCodes.Client.PlayerHit)
+            {
+                uint readerPos = 0;
+                ushort pIndex = Deserializer.DeserializeUShort(evt.Message.Data, ref readerPos);
+                PlayerHitPacket savedHitData = PlayerHitPacket.DeSerialize(evt.Message.Data, ref readerPos);
+
+                if (pIndex == NetConstants.InvalidClientIndex)
+                {
+                    return;
+                }
+                _playerHitDictionnary[pIndex] = savedHitData;
             }
         }
 

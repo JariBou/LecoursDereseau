@@ -86,7 +86,7 @@ namespace _project.Scripts.GameNetwork
                 {
                     uint readerPos = 0;
                     ushort newPlayerIndex = Deserializer.DeserializeUShort(obj.Message.Data, ref readerPos);
-                    // for now this is how we detect if we were the ones to connect
+                    // for now this is how we detect if we were the ones to connect 
                     // Kind of dirty but works for now
                     if (_playerIndex == NetConstants.InvalidClientIndex)
                     {
@@ -119,6 +119,10 @@ namespace _project.Scripts.GameNetwork
                         
                         ReplicatedPlayerScriptBase player = _players[playerIndex];
                         player.ApplyInput(packet.PlayerInputDic[playerIndex]);
+                        
+                        if(packet.PlayerHitPacketDic[PlayerIndex].gotHurt == true)
+                                player.Hurt();
+
                         if (playerIndex == _playerIndex)
                         {
                             float posDiff = (position - _player.GetPos()).magnitude;

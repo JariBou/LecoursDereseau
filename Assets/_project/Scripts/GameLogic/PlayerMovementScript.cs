@@ -190,10 +190,10 @@ namespace _project.Scripts.GameLogic
             NetworkClient.SendMessageToServer(new NetworkMessage(byteArray, (ushort)NetOpCodes.Client.PlayerInput));
             LastRecordedInput.Rreset();
             // Parse Hit packet
-            Serializer.SerializeUShort(byteArray, _gameClient.PlayerIndex);
-            packetHit.Serialize(byteArray);
-            NetworkClient.SendMessageToServer(new NetworkMessage(byteArray, (ushort)NetOpCodes.Client.PlayerHit));
-            packetHit.Rreset();
+            // Serializer.SerializeUShort(byteArray, _gameClient.PlayerIndex);
+            // packetHit.Serialize(byteArray);
+            // NetworkClient.SendMessageToServer(new NetworkMessage(byteArray, (ushort)NetOpCodes.Client.PlayerHit));
+            // packetHit.Rreset();
 
         }
 

@@ -120,8 +120,8 @@ namespace _project.Scripts.GameNetwork
                         ReplicatedPlayerScriptBase player = _players[playerIndex];
                         player.ApplyInput(packet.PlayerInputDic[playerIndex]);
                         
-                        if(packet.PlayerHitPacketDic[PlayerIndex].gotHurt == true)
-                                player.Hurt();
+                        // if(packet.PlayerHitPacketDic[PlayerIndex].gotHurt == true)
+                                // player.Hurt();
 
                         if (playerIndex == _playerIndex)
                         {

@@ -5,14 +5,32 @@ namespace _project.Scripts.GameLogic
 {
     public class HitBoxScript : MonoBehaviour
     {
-        private void OnTriggerEnter(Collider other)
+        private Transform _transformParent;
+
+        private void Awake()
         {
-            PlayerMovementScript playerMovementScript = other.GetComponent<PlayerMovementScript>();
-            if (playerMovementScript != null)
+            _transformParent = transform.parent;
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (other.transform == _transformParent)
             {
-                Debug.Log("Hit Player!!");
-                playerMovementScript.RecordDamage();
+                return;
             }
+            Debug.Log("HitBox");
+            ReplicatedPlayerScriptBase replicatedPlayerScriptBase = other.GetComponent<ReplicatedPlayerScriptBase>();
+            if (replicatedPlayerScriptBase != null)
+            {
+                Vector3 direction = replicatedPlayerScriptBase.transform.position - _transformParent.position;
+                replicatedPlayerScriptBase.Hurt(direction);
+            }
+            // PlayerMovementScript playerMovementScript = other.GetComponent<PlayerMovementScript>();
+            // if (playerMovementScript != null)
+            // {
+            //     Debug.Log("Hit Player!!");
+            //     playerMovementScript.RecordDamage();
+            // }
         }
     }
 }

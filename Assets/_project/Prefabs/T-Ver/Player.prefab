@@ -87,11 +87,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2eaea777839f4d75afba8b9824c1cea4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animator: {fileID: 1578127266057880710}
-  _gameClient: {fileID: 0}
   speed: 10
   isGrounded: 0
   jumpValue: 10
+  animator: {fileID: 1578127266057880710}
+  _gameClient: {fileID: 0}
 --- !u!50 &1068613385265382716
 Rigidbody2D:
   serializedVersion: 5
@@ -188,13 +188,14 @@ GameObject:
   m_Component:
   - component: {fileID: 4312473988529791206}
   - component: {fileID: 8967458873898950705}
+  - component: {fileID: 112249211524546254}
   m_Layer: 0
   m_Name: HitBox
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4312473988529791206
 Transform:
   m_ObjectHideFlags: 0
@@ -256,6 +257,18 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &112249211524546254
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5839483148322141948}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf27c61089da47b6bfe63f8c0e0ffb6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &6631807398113256060
 GameObject:
   m_ObjectHideFlags: 0
@@ -333,7 +346,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 9dd530aafd53eda4a9507e33c7dab5bc, type: 3}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

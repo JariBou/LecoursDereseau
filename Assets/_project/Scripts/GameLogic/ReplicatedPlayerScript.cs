@@ -12,6 +12,7 @@ namespace _project.Scripts.GameLogic
         protected float currentJump = 0f;
         float CurrentHealth = 0.0f;
         bool isAlive = false;
+        bool wasLastMovingRight = true;
 
         protected Rigidbody2D rb;
         [SerializeField] protected Animator animator;
@@ -41,27 +42,32 @@ namespace _project.Scripts.GameLogic
             animator.SetTrigger("Attack");
         }
         
-        public void Hurt()
+        public void Hurt(Vector3 direction)
         {
-            CurrentHealth += GameConstants.BaseAttackDMG;
+            CurrentHealth -= GameConstants.BaseAttackDMG;
             animator.SetTrigger("Hurt");
             float knockbackFullModifier = GameConstants.BaseAttackKnockback;
             if (CurrentHealth > 0)
                 knockbackFullModifier += GameConstants.HPKnockBackModifier * CurrentHealth;
 
-            Vector2 KnockbackVector = new Vector2(knockbackFullModifier, knockbackFullModifier);
+            direction *= knockbackFullModifier;
+            Vector2 knockbackVector = new Vector2(direction.x, direction.y);
 
-            rb.linearVelocity *= KnockbackVector;
+            rb.linearVelocity += knockbackVector;
         }
 
         private void Update()
         {
             animator.SetFloat("Speed", rb.linearVelocity.magnitude);
-            transform.rotation = Quaternion.Euler(0, rb.linearVelocityX < 0 ? 180 : 0, 0);
+            transform.rotation = Quaternion.Euler(0, wasLastMovingRight ? 0 : 180, 0);
         }
 
         public void ApplyInput(PlayerInput playerInput)
         {
+            if (playerInput.MoveLeft || playerInput.MoveRight)
+            {
+                wasLastMovingRight = playerInput.MoveRight;
+            }
             if (playerInput.Attack)
             {
                 Attack();
@@ -79,22 +85,18 @@ namespace _project.Scripts.GameLogic
 
         public void ApplyInputs(PlayerInput input)
         {
-            if (input.MoveLeft)
+            ApplyInput(input);
+            if (input.MoveLeft && rb.linearVelocityX > -GameConstants.MaxSpeed)
             {
-                rb.linearVelocityX = -speed;
-            } else  if (input.MoveRight)
+                rb.linearVelocityX -= speed;
+            } else  if (input.MoveRight && rb.linearVelocityX < GameConstants.MaxSpeed)
             {
-                rb.linearVelocityX = speed;
+                rb.linearVelocityX += speed;
             }
 
             if (input.Jump)
             {
                 rb.linearVelocityY = jumpValue;
-            }
-
-            if (input.Attack)
-            {
-                Attack();
             }
         }
 

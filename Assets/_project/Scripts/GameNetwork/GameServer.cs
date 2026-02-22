@@ -23,6 +23,8 @@ namespace _project.Scripts.GameNetwork
 
         private Dictionary<ushort, Peer> _playerClientDic = new(); // TEMP type, to change
 
+        [SerializeField] Transform playerSpawn;
+
         private void Awake()
         {
             _server.IpAddressType = AddressType.IPv4;
@@ -206,6 +208,12 @@ namespace _project.Scripts.GameNetwork
                     return;
                 }
                 _playerHitDictionnary[pIndex] = savedHitData;
+            } else if (evt.Message.OpCode == (ushort)NetOpCodes.Client.PlayerDeath)
+            {
+                uint readerPos = 0;
+                ushort pIndex = Deserializer.DeserializeUShort(evt.Message.Data, ref readerPos);
+                _players[pIndex].transform.position = playerSpawn.position;
+
             }
         }
 

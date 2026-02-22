@@ -150,6 +150,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _cinemachineTargetGroup: {fileID: 796452322}
   _playerPrefab: {fileID: 9165543317602562128, guid: 25f6a6d426684c842bf5d730d238c36b, type: 3}
+  playerSpawn: {fileID: 1020769161}
 --- !u!4 &239894201
 Transform:
   m_ObjectHideFlags: 0
@@ -442,6 +443,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 54cb8c9ddc7a3ff4183fffd1b048318c, type: 3}
+--- !u!4 &1020769161 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2569988637898711401, guid: 54cb8c9ddc7a3ff4183fffd1b048318c, type: 3}
+  m_PrefabInstance: {fileID: 1020769160}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1315112609
 GameObject:
   m_ObjectHideFlags: 0
@@ -573,8 +579,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1736286044}
   - component: {fileID: 1736286043}
-  - component: {fileID: 1736286042}
   - component: {fileID: 1736286041}
+  - component: {fileID: 1736286042}
   - component: {fileID: 1736286040}
   m_Layer: 0
   m_Name: CinemachineCamera

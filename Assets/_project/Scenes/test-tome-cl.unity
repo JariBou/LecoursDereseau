@@ -597,6 +597,10 @@ PrefabInstance:
       propertyPath: _gameClient
       value: 
       objectReference: {fileID: 239894202}
+    - target: {fileID: 6411568052869865921, guid: fcad9b0ad4d93b64ba4d03e9374b84e2, type: 3}
+      propertyPath: respawnPoint
+      value: 
+      objectReference: {fileID: 1665965052}
     - target: {fileID: 8265190991993718292, guid: fcad9b0ad4d93b64ba4d03e9374b84e2, type: 3}
       propertyPath: m_LocalPosition.x
       value: -4.33
@@ -836,6 +840,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 54cb8c9ddc7a3ff4183fffd1b048318c, type: 3}
+--- !u!4 &1665965052 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2569988637898711401, guid: 54cb8c9ddc7a3ff4183fffd1b048318c, type: 3}
+  m_PrefabInstance: {fileID: 1441433991}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

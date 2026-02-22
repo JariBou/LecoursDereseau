@@ -13,10 +13,16 @@ namespace _project.Scripts.GameLogic
         float CurrentHealth = 0.0f;
         bool isAlive = false;
         bool wasLastMovingRight = true;
-
+        private Vector3 spawnPos;
         protected Rigidbody2D rb;
         [SerializeField] protected Animator animator;
-        
+        //[SerializeField] protected Transform respawnPoint;
+
+        private void Awake()
+        {
+            spawnPos = transform.position;
+        }
+
         public Vector3 GetPos()
         {
             return transform.position;
@@ -72,6 +78,11 @@ namespace _project.Scripts.GameLogic
             {
                 Attack();
             }
+        }
+        public void DoDie()
+        {
+            Debug.Log("Player dies");
+            SetPos(spawnPos);
         }
     }
 

@@ -16,6 +16,7 @@
             PlayerInfo = 1,
             PlayerPos = 2, // TEMP
             PlayerHit = 3,
+            PlayerDeath = 4,
             PlayerInput = 69,
 
         }

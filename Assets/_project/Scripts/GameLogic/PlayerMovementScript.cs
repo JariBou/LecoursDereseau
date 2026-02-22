@@ -48,6 +48,7 @@ namespace _project.Scripts.GameLogic
         //public bool MoveCancelled = false;
         public bool Attack = false;
         public bool Jump = false;
+
         public void Rreset()
         {
             // MoveLeft = false;
@@ -93,10 +94,10 @@ namespace _project.Scripts.GameLogic
         private PlayerInput LastRecordedInput = new ();
         private PlayerHitPacket packetHit= new();
 
+        bool recordDeath = false;
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
-
             inputs = new PlayerInputs();
 
             // Deplacement
@@ -174,6 +175,15 @@ namespace _project.Scripts.GameLogic
             packetHit.gotHurt = true;
         }
 
+        public void RecordDeath()
+        {
+            recordDeath = true;
+
+            List<byte> byteArray = new();
+            Serializer.SerializeUShort(byteArray, _gameClient.PlayerIndex);
+            NetworkClient.SendMessageToServer(new NetworkMessage(byteArray, (ushort)NetOpCodes.Client.PlayerDeath));
+        }
+
         private void TickManagerOnNetworkTick()
         {
             if (!NetworkClient.Connected || _gameClient.PlayerIndex == NetConstants.InvalidClientIndex)
@@ -189,6 +199,14 @@ namespace _project.Scripts.GameLogic
             LastRecordedInput.Serialize(byteArray);
             NetworkClient.SendMessageToServer(new NetworkMessage(byteArray, (ushort)NetOpCodes.Client.PlayerInput));
             LastRecordedInput.Rreset();
+
+            if(recordDeath)
+            {
+                recordDeath = false;
+                List<byte> byteArrayDeath = new();
+                Serializer.SerializeUShort(byteArray, _gameClient.PlayerIndex);
+                NetworkClient.SendMessageToServer(new NetworkMessage(byteArray, (ushort)NetOpCodes.Client.PlayerDeath));
+            }
             // Parse Hit packet
             // Serializer.SerializeUShort(byteArray, _gameClient.PlayerIndex);
             // packetHit.Serialize(byteArray);
@@ -204,6 +222,5 @@ namespace _project.Scripts.GameLogic
                 NetworkClient.Disconnect();
             }
         }
-
     }
 }

@@ -6,6 +6,7 @@ using _project.Scripts.GameNetwork.Packets;
 using _project.Scripts.PluginInterfaces;
 using Network._project.Scripts.Network.Communication;
 using Network._project.Scripts.Network.Entities;
+using Unity.Cinemachine;
 using UnityEngine;
 using EventType = _project.Scripts.PluginInterfaces.EventType;
 
@@ -14,7 +15,7 @@ namespace _project.Scripts.GameNetwork
     public class GameServer : MonoBehaviour
     {
         private NetworkServer _server = new();
-        [SerializeField] private Transform _player; // TEMP
+        [SerializeField] private CinemachineTargetGroup _cinemachineTargetGroup;
         [SerializeField] private GameObject _playerPrefab; // TEMP
         private Dictionary<ushort, ReplicatedPlayerScript> _players = new(); // TEMP type, to change
         private Dictionary<ushort, PlayerInput> _playersWithInputs = new(); // TEMP type, to change
@@ -110,6 +111,7 @@ namespace _project.Scripts.GameNetwork
             {
                 return;
             }
+            _cinemachineTargetGroup.RemoveMember(_players[playerIndex].transform);
             Destroy(_players[playerIndex].gameObject);
             _players.Remove(playerIndex);
             _playerClientDic.Remove(playerIndex);
@@ -154,6 +156,7 @@ namespace _project.Scripts.GameNetwork
                 }
                 _players.Add(playerIndex, player.GetComponent<ReplicatedPlayerScript>());
                 _playersWithInputs.Add(playerIndex, new PlayerInput());
+                _cinemachineTargetGroup.AddMember(_players[playerIndex].transform, 1, 0.5f);
 
                 NetworkMessage msg = new(new List<byte>(), (ushort)NetOpCodes.Server.PlayerConnected);
                 // We set the first data as the new player's index (the one that just send the data

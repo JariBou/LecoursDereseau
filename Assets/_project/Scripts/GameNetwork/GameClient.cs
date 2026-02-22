@@ -6,6 +6,7 @@ using _project.Scripts.GameNetwork.Packets;
 using _project.Scripts.PluginInterfaces;
 using Network._project.Scripts.Network.Communication;
 using Network._project.Scripts.Network.Entities;
+using Unity.Cinemachine;
 using UnityEngine;
 using EventType = _project.Scripts.PluginInterfaces.EventType;
 
@@ -23,6 +24,8 @@ namespace _project.Scripts.GameNetwork
         private Dictionary<ushort, ReplicatedPlayerScriptBase> _players = new(); // TEMP type, to change
         [SerializeField] private ReplicatedPlayerScriptBase _player; // TEMP type, to change
         private ushort _playerIndex = NetConstants.InvalidClientIndex;
+        
+        [SerializeField] private CinemachineTargetGroup _cinemachineTargetGroup;
 
         private void Start()
         {
@@ -103,6 +106,10 @@ namespace _project.Scripts.GameNetwork
                                 playerIndex == _playerIndex
                                     ? _player.GetComponent<PlayerMovementScript>()
                                     : Instantiate(_playerPrefab, transform).GetComponent<ReplicatedPlayerScript>());
+                            if (playerIndex != _playerIndex)
+                            {
+                                _cinemachineTargetGroup.AddMember(_players[playerIndex].transform,  1, 0.5f);
+                            }
                         }
                     }
 
@@ -144,6 +151,7 @@ namespace _project.Scripts.GameNetwork
                 {
                     uint readerPos = 0;
                     ushort playerIndex = Deserializer.DeserializeUShort(obj.Message.Data, ref readerPos);
+                    _cinemachineTargetGroup.RemoveMember(_players[playerIndex].transform);
                     Destroy(_players[playerIndex].gameObject);
                     _players.Remove(playerIndex);
                     break;

@@ -4,6 +4,8 @@ using System.Linq;
 using _project.Scripts.GameLogic;
 using _project.Scripts.GameNetwork.Packets;
 using _project.Scripts.PluginInterfaces;
+using _project.Scripts.UI;
+using JetBrains.Annotations;
 using Network._project.Scripts.Network.Communication;
 using Network._project.Scripts.Network.Entities;
 using Unity.Cinemachine;
@@ -17,9 +19,13 @@ namespace _project.Scripts.GameNetwork
         private NetworkServer _server = new();
         [SerializeField] private CinemachineTargetGroup _cinemachineTargetGroup;
         [SerializeField] private GameObject _playerPrefab; // TEMP
+        [SerializeField] private ScoreDisplayScript _scoreDisplay; // TEMP
+        
+        
         private Dictionary<ushort, ReplicatedPlayerScript> _players = new(); // TEMP type, to change
         private Dictionary<ushort, PlayerInput> _playersWithInputs = new(); // TEMP type, to change
         private Dictionary<ushort, PlayerHitPacket> _playerHitDictionnary = new(); // TEMP type, to change
+        private List<PlayerData> _playerDatas = new();
 
         private Dictionary<ushort, Peer> _playerClientDic = new(); // TEMP type, to change
 
@@ -64,14 +70,41 @@ namespace _project.Scripts.GameNetwork
             }
 
             // Send data to all players
-            PlayerDataPacket dataPacket = new(_playersWithInputs, _players, _playerHitDictionnary);
             
+            Dictionary<ushort, uint> scoreDict = new();
+            foreach (PlayerData playerData in _playerDatas)
+            {
+                scoreDict[playerData.ID] = playerData.Score;
+            }
+            
+            PlayerDataPacket dataPacket = new(_playersWithInputs, _players, _playerHitDictionnary)
+                {
+                    PlayerScores = scoreDict
+                };
+
             if (!_server.SendMessageToAllClients(dataPacket.BuildNetworkMessage()))
             {
                 Debug.LogError("SendMessageToAllClients Error");
             }
 
             _server.PollEvents(NetworkEventCallback);
+        }
+
+        public void OnPlayerDied(ushort deadPlayerIndex, ushort killerPlayerIndex)
+        {
+            PlayerData deadPlayerData = FindPlayerData(deadPlayerIndex);
+            if (deadPlayerData != null)
+            {
+                deadPlayerData.Score = 0;
+            }
+            
+            PlayerData killerPlayerData = FindPlayerData(killerPlayerIndex);
+            if (killerPlayerData != null)
+            {
+                killerPlayerData.Score += 1;
+            }
+
+            _scoreDisplay.UpdateEntries(_playerDatas, null);
         }
 
         private void NetworkEventCallback(NetworkEvent evt)
@@ -99,6 +132,12 @@ namespace _project.Scripts.GameNetwork
             }
         }
 
+        [CanBeNull]
+        private PlayerData FindPlayerData(ushort index)
+        {
+            return index == NetConstants.InvalidClientIndex ? null : _playerDatas.FirstOrDefault(playerData => playerData.ID == index);
+        }
+
         private void OnPlayerTimeout(NetworkEvent evt)
         {
             OnPlayerDisconnected(evt);
@@ -115,6 +154,7 @@ namespace _project.Scripts.GameNetwork
             Destroy(_players[playerIndex].gameObject);
             _players.Remove(playerIndex);
             _playerClientDic.Remove(playerIndex);
+            _playerDatas.Remove(FindPlayerData(playerIndex));
             
             NetworkMessage msg = new NetworkMessage((ushort)NetOpCodes.Server.PlayerDisconnected);
             Serializer.SerializeUShort(msg.Data, playerIndex);
@@ -137,6 +177,7 @@ namespace _project.Scripts.GameNetwork
             }
             
             _playerClientDic[newPlayerIndex] = evt.Source;
+            _playerDatas.Add(new PlayerData($"Player {newPlayerIndex}", newPlayerIndex));
         }
 
         private void OnMessageReceived(NetworkEvent evt)
@@ -168,6 +209,7 @@ namespace _project.Scripts.GameNetwork
                 }
 
                 _server.SendMessageToAllClients(msg);
+                _scoreDisplay.UpdateEntries(_playerDatas, null);
 
                 Debug.Log("Client connected with instance ID: " + clientInstanceId);
             }

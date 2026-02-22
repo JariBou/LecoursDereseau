@@ -4,6 +4,8 @@ using System.Linq;
 using _project.Scripts.GameLogic;
 using _project.Scripts.GameNetwork.Packets;
 using _project.Scripts.PluginInterfaces;
+using _project.Scripts.UI;
+using JetBrains.Annotations;
 using Network._project.Scripts.Network.Communication;
 using Network._project.Scripts.Network.Entities;
 using Unity.Cinemachine;
@@ -26,6 +28,11 @@ namespace _project.Scripts.GameNetwork
         private ushort _playerIndex = NetConstants.InvalidClientIndex;
         
         [SerializeField] private CinemachineTargetGroup _cinemachineTargetGroup;
+        
+        [SerializeField] private ScoreDisplayScript _scoreDisplay;
+        private List<PlayerData> _playerDatas = new();
+        private PlayerData SelfPlayerData => FindPlayerData(_playerIndex);
+
 
         private void Start()
         {
@@ -102,6 +109,7 @@ namespace _project.Scripts.GameNetwork
                         ushort playerIndex = Deserializer.DeserializeUShort(obj.Message.Data, ref readerPos);
                         if (!_players.ContainsKey(playerIndex))
                         {
+                            _playerDatas.Add(new PlayerData($"Player {playerIndex}", playerIndex));
                             _players.Add(playerIndex,
                                 playerIndex == _playerIndex
                                     ? _player.GetComponent<PlayerMovementScript>()
@@ -113,6 +121,7 @@ namespace _project.Scripts.GameNetwork
                         }
                     }
 
+                    _scoreDisplay.UpdateEntries(_playerDatas, SelfPlayerData);
                     break;
                 }
                 case (ushort)NetOpCodes.Server.PlayerData:
@@ -123,6 +132,13 @@ namespace _project.Scripts.GameNetwork
                     {
                         Vector3 position = packet.PlayerPosDic[playerIndex];
                         Vector3 speed = packet.PlayerSpeedDic[playerIndex];
+
+
+                        PlayerData playerData = FindPlayerData(playerIndex);
+                        if (playerData != null)
+                        {
+                            playerData.Score = packet.PlayerScores[playerIndex];
+                        }
                         
                         ReplicatedPlayerScriptBase player = _players[playerIndex];
                         player.ApplyInput(packet.PlayerInputDic[playerIndex]);
@@ -154,9 +170,16 @@ namespace _project.Scripts.GameNetwork
                     _cinemachineTargetGroup.RemoveMember(_players[playerIndex].transform);
                     Destroy(_players[playerIndex].gameObject);
                     _players.Remove(playerIndex);
+                    _playerDatas.Remove(FindPlayerData(playerIndex));
                     break;
                 }
             }
+        }
+        
+        [CanBeNull]
+        private PlayerData FindPlayerData(ushort index)
+        {
+            return index == NetConstants.InvalidClientIndex ? null : _playerDatas.FirstOrDefault(playerData => playerData.ID == index);
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using _project.Scripts.GameLogic;
-using _project.Scripts.Network;
 using Network._project.Scripts.Network.Communication;
 using UnityEngine;
 
@@ -13,6 +12,7 @@ namespace _project.Scripts.GameNetwork.Packets
         public Dictionary<ushort, Vector3> PlayerSpeedDic = new();
         public Dictionary<ushort, PlayerInput> PlayerInputDic = new();
         public Dictionary<ushort, PlayerHitPacket> PlayerHitPacketDic = new();
+        public Dictionary<ushort, uint> PlayerScores = new();
 
 
 
@@ -55,10 +55,13 @@ namespace _project.Scripts.GameNetwork.Packets
                 float tY =  Deserializer.DeserializeFloat(message.Data, ref readerPos);
                 float sX =  Deserializer.DeserializeFloat(message.Data, ref readerPos);
                 float sY =  Deserializer.DeserializeFloat(message.Data, ref readerPos);
+                uint score =  Deserializer.DeserializeUInt(message.Data, ref readerPos);
+                
                 PlayerPosDic[playerIndex] = new Vector3(tX, tY, 0);
                 PlayerSpeedDic[playerIndex] = new Vector3(sX, sY, 0);
                 PlayerInputDic[playerIndex] = PlayerInput.DeSerialize(message.Data, ref readerPos);
                 PlayerHitPacketDic[playerIndex] = PlayerHitPacket.DeSerialize(message.Data, ref readerPos);
+                PlayerScores[playerIndex] = score;
             }
 
             return this;
@@ -75,12 +78,15 @@ namespace _project.Scripts.GameNetwork.Packets
                 Vector3 position = PlayerPosDic[playerIndex];
                 Vector3 speed = PlayerSpeedDic[playerIndex];
                 PlayerInput input = PlayerInputDic[playerIndex];
+                uint score = PlayerScores[playerIndex];
+                
                 PlayerHitPacket hitPacket = PlayerHitPacketDic.TryGetValue(playerIndex, out PlayerHitPacket hit) ? hit : new PlayerHitPacket();
                 Serializer.SerializeUShort(data, playerIndex);
                 Serializer.SerializeFloat(data, position.x);
                 Serializer.SerializeFloat(data, position.y);
                 Serializer.SerializeFloat(data, speed.x);
                 Serializer.SerializeFloat(data, speed.y);
+                Serializer.SerializeUInt(data, score);
                 input.Serialize(data);
                 hitPacket.Serialize(data);
             }

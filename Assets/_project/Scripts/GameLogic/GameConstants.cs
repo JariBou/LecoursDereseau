@@ -1,6 +1,3 @@
-using UnityEngine;
-
-
 namespace _project.Scripts.GameLogic
 {
     public static class GameConstants

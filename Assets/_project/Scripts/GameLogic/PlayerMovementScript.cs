@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using _project.Scripts.GameNetwork;
 using Network._project.Scripts.Network.Communication;
 using Network._project.Scripts.Network.Entities;

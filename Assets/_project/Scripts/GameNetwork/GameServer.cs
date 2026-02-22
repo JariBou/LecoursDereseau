@@ -6,6 +6,7 @@ using _project.Scripts.GameNetwork.Packets;
 using _project.Scripts.PluginInterfaces;
 using Network._project.Scripts.Network.Communication;
 using Network._project.Scripts.Network.Entities;
+using TMPro;
 using Unity.Cinemachine;
 using UnityEngine;
 using EventType = _project.Scripts.PluginInterfaces.EventType;
@@ -23,10 +24,12 @@ namespace _project.Scripts.GameNetwork
 
         private Dictionary<ushort, Peer> _playerClientDic = new(); // TEMP type, to change
 
+
         private void Awake()
         {
             _server.IpAddressType = AddressType.IPv4;
-            _server.Port = Convert.ToUInt16("6060");
+            _server.Port = ConnectionParamsData.Instance.Port;
+            _server.IpAddress = ConnectionParamsData.Instance.IpAddress;
             _server.Start();
         }
 

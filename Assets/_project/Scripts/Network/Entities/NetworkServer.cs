@@ -98,8 +98,12 @@ namespace Network._project.Scripts.Network.Entities
                 AddressType.IPv6 => AddressType.IPv6,
                 _ => AddressType.IPv4
             };
-            Address address = Address.BuildAny(addressType);
+            Address address = new();
+            // Address address = Address.BuildAny(addressType);
+            address.Type = addressType;
+            address.SetIP(IpAddress);
             address.Port = Port;
+            
             
             Stop();
             _server = new Host();

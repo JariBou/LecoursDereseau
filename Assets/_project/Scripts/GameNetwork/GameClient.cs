@@ -6,6 +6,7 @@ using _project.Scripts.GameNetwork.Packets;
 using _project.Scripts.PluginInterfaces;
 using Network._project.Scripts.Network.Communication;
 using Network._project.Scripts.Network.Entities;
+using TMPro;
 using Unity.Cinemachine;
 using UnityEngine;
 using EventType = _project.Scripts.PluginInterfaces.EventType;
@@ -27,10 +28,11 @@ namespace _project.Scripts.GameNetwork
         
         [SerializeField] private CinemachineTargetGroup _cinemachineTargetGroup;
 
+        
         private void Start()
         {
             _client.SetOnConnectedCallback(OnConnectedToServer);
-            _client.ConnectTo("127.0.0.1", Convert.ToUInt16("6060"), AddressType.IPv4);
+            _client.ConnectTo(ConnectionParamsData.Instance.IpAddress, ConnectionParamsData.Instance.Port, AddressType.IPv4);
         }
 
         // ReSharper disable once Unity.IncorrectMethodSignature Reason: wtf Rider this is correct stop annoying me

@@ -96,10 +96,27 @@ namespace _project.Scripts.GameLogic
 
             if (input.Jump)
             {
-                rb.linearVelocityY = jumpValue;
+                JumpLogic();
+                //rb.linearVelocityY = jumpValue;
             }
         }
 
-       
+        void JumpLogic()
+        {
+            // CheckGround
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, -Vector2.up);
+            Debug.DrawRay(transform.position, -Vector2.up);
+            if (hit)
+            {
+                //Debug.Log(hit.transform.gameObject.name);
+                //Debug.Log("Distance to ground: " + Vector3.Distance(hit.point, transform.position));
+
+                if ((Vector3.Distance(hit.point, transform.position) <= 2.0f)
+                    && (hit.transform.gameObject.tag == "ground"))
+                {
+                    rb.linearVelocityY = jumpValue;
+                }
+            }
+        }
     }
 }

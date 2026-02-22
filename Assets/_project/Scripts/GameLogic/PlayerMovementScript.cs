@@ -203,34 +203,7 @@ namespace _project.Scripts.GameLogic
             {
                 NetworkClient.Disconnect();
             }
-            // rigidbody.AddForce(new Vector2(MvmtValue.x * speed, 0f));
-            //
-            // if (pendingJump)
-            // {
-            //     rigidbody.AddForce(new Vector2(0f, jumpValue), ForceMode2D.Impulse);
-            //     pendingJump = false;
-            // }
-            //
-            // // CheckGround
-            // RaycastHit2D hit = Physics2D.Raycast(transform.position, -Vector2.up);
-            //
-            // Debug.DrawRay(transform.position, -Vector2.up);
-            //
-            // isGrounded = false;
-            // if(hit)
-            // {
-            //     //Debug.Log(hit.transform.gameObject.name);
-            //     //Debug.Log("Distance to ground: " + Vector3.Distance(hit.point, transform.position));
-            //  
-            //     if((Vector3.Distance(hit.point, transform.position) <= 2.0f) 
-            //         && (hit.transform.gameObject.tag == "ground"))
-            //     {
-            //         isGrounded = true;
-            //     } else
-            //     {
-            //         isGrounded = false;
-            //     }
-            // } 
         }
+
     }
 }
